@@ -7,7 +7,7 @@ from loguru import logger
 from nonebot.log import logger as log
 from datetime import datetime, timedelta
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # logger.remove()
 # logger.add(

@@ -1,19 +1,21 @@
 import hashlib
 import urllib.parse as urlparse
 import time
-import urllib
+import os
+import shutil
 import requests
 import json
+import yaml
 from http import cookiejar
 import requests
 import time
 import hashlib
 import urllib.parse as urlparse
 from io import BytesIO
-
-import qrcode_terminal
+from pathlib import Path
+# import qrcode_terminal
 import qrcode
-from PIL import Image
+from nonebot.log import logger
 
 Cookies = cookiejar.CookieJar()
 session = requests.Session()
@@ -21,7 +23,7 @@ session.cookies = Cookies
 
 csrf = ""
 access_key = ""
-
+base_path = Path().joinpath('data/bilifan')
 
 # async def is_login():
     # global cookies
@@ -81,7 +83,7 @@ async def get_tv_qrcode_url_and_auth_code():
         # query += k + "=" + v + "&"
     # return query[:-1]
 
-async def verify_login(auth_code):
+async def verify_login(auth_code,data_path):
     api = "http://passport.bilibili.com/x/passport-tv-login/qrcode/poll"
     data = {
         "auth_code": auth_code,
@@ -105,13 +107,18 @@ async def verify_login(auth_code):
             time.sleep(3)
             
         if code == 0:
-            print("登录成功")
-            print("access_key:", access_key)
-            filename = "login_info.txt"
-            with open(filename, "w") as f:
+            logger.success("登录成功")
+            with open(data_path/"login_info.txt", "w") as f:
                 f.write(access_key)
-            print("access_key已保存在", filename)
-            break
+            if not os.path.exists(data_path/'users.yaml'):
+                logger.info('初始化配置文件')
+                shutil.copy2(Path().joinpath('data/bilifan/users.yaml'), data_path/'users.yaml')
+            with open('data_path/users.yaml', 'r', encoding='utf-8') as f:
+                config = yaml.safe_load(f)
+            config['USERS'][0]['access_key'] = access_key
+            with open('data_path/users.yaml', 'w', encoding='utf-8') as f:
+                yaml.dump(config, f, allow_unicode=True, default_flow_style=False)
+            return "access_key已保存"
         else:
             time.sleep(3)
 
@@ -145,22 +152,22 @@ async def draw_QR(login_url):
     # img.save("qrcode.png")
 
 
-async def loginBili():
+# async def loginBili():
     
-    login_url, auth_code = await get_tv_qrcode_url_and_auth_code()
-    qrcode_terminal.draw(login_url)
-    print("或将此链接复制到手机B站打开:", login_url)
-    while True:
-        if await verify_login(auth_code):
-            print("登录成功！")
-            break
-        else:
-            time.sleep(3)
-            print("等待扫码登录中...")
+#     login_url, auth_code = await get_tv_qrcode_url_and_auth_code()
+#     qrcode_terminal.draw(login_url)
+#     print("或将此链接复制到手机B站打开:", login_url)
+#     while True:
+#         if await verify_login(auth_code):
+#             print("登录成功！")
+#             break
+#         else:
+#             time.sleep(3)
+#             print("等待扫码登录中...")
             
-async def main():
-    loginBili()
-    input()
+# async def main():
+#     loginBili()
+#     input()
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
