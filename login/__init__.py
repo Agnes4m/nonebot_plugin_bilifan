@@ -9,6 +9,7 @@ import requests
 import time
 import hashlib
 import urllib.parse as urlparse
+from io import BytesIO
 
 import qrcode_terminal
 import qrcode
@@ -136,8 +137,11 @@ async def draw_QR(login_url):
     qr = qrcode.QRCode(version=1, box_size=10, border=4)
     qr.add_data(login_url)
     qr.make(fit=True)
-    img:Image = qr.make_image(fill_color="black", back_color="white")
-    return img
+    img = qr.make_image(fill_color="black", back_color="white")
+    buffered = BytesIO()
+    img.save(buffered,format="PNG")
+    img_bytes = buffered.getvalue()
+    return img_bytes
     # img.save("qrcode.png")
 
 

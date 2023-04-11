@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "nonebot-plugin-bilifan"
 version = "0.0.1"
-description = "L4D2 server related operations plugin for NoneBot2"
+description = "刷bili粉丝牌子的机器人插件"
 authors = ["Agnes_Digital <Z735803792@163.com>"]
 license = "GPLv3"
 readme = "README.md"
@@ -30,7 +30,6 @@ nonebot_plugin_apscheduler = "^0.2.0"
 pillow = "^9.3.0"
 aiohttp = "^3.8.3"
 aiohttp-socks = "^0.8.0"
-loguru = "^0.7.0"
 pyyaml = "^6.0"
 
 [build-system]
