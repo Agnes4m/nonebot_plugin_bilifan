@@ -7,7 +7,7 @@ import sys
 import time
 import json
 from typing import Union
-from nonebot.log import logger
+from nonebot.log import logger as log
 from urllib.parse import urlencode, urlparse
 
 

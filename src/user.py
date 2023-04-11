@@ -8,14 +8,14 @@ from datetime import datetime, timedelta
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-logger.remove()
-logger.add(
-    sys.stdout,
-    colorize=True,
-    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> <blue> {extra[user]} </blue> <level>{message}</level>",
-    backtrace=True,
-    diagnose=True,
-)
+# logger.remove()
+# logger.add(
+    # sys.stdout,
+    # colorize=True,
+    # format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> <blue> {extra[user]} </blue> <level>{message}</level>",
+    # backtrace=True,
+    # diagnose=True,
+# )
 
 global user
 class BiliUser:
@@ -48,7 +48,7 @@ class BiliUser:
         """
         loginInfo = await self.api.loginVerift()
         self.mid, self.name = loginInfo['mid'], loginInfo['name']
-        self.log = logger.bind(user=self.name)
+        self.log = logger.info(user=self.name)
         if loginInfo['mid'] == 0:
             self.isLogin = False
             return False

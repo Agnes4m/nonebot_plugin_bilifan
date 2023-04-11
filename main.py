@@ -1,15 +1,13 @@
 import json
 import os
 import sys
-from nonebot.log import logger
+from nonebot.log import logger as log
 import warnings
 import asyncio
 import aiohttp
 import itertools
 from .src import BiliUser
 
-log = logger.bind(user="B站粉丝牌助手")
-__VERSION__ = "0.3.6"
 
 warnings.filterwarnings(
     "ignore",
@@ -124,7 +122,12 @@ async def push_message(session, sendkey, message):
     await session.post(url, data=data)
     log.info("Server酱已推送")
 
-
+async def strat_once():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(main())
+    log.info("任务结束")
+        
 if __name__ == '__main__':
     cron = users.get('CRON', None)
 

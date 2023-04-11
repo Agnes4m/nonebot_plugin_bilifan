@@ -182,6 +182,7 @@ def map_to_string(params: dict) -> str:
     return query
 
 def draw_QR(login_url):
+    "绘制二维码"
     qr = qrcode.QRCode(version=1, box_size=10, border=4)
     qr.add_data(login_url)
     qr.make(fit=True)
@@ -191,7 +192,6 @@ def draw_QR(login_url):
 
 
 def loginBili():
-    print("请最大化窗口，以确保二维码完整显示，回车继续")
     
     login_url, auth_code = get_tv_qrcode_url_and_auth_code()
     qrcode_terminal.draw(login_url)
