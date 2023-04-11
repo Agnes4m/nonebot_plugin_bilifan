@@ -21,60 +21,22 @@ session.cookies = Cookies
 csrf = ""
 access_key = ""
 
-def login():
-    global access_key, csrf, Cookies
-    filename = "login_info.json"
-    try:
-        with open(filename, "r") as f:
-            data = f.read()
-            if len(data) == 0:
-                print("未登录,请扫码登录")
-                loginBili()
-            else:
-                access_key = json.loads(data)["data"]["access_token"]
-                for c in json.loads(data)["data"]["cookie_info"]["cookies"]:
-                    Cookies.append({
-                        "name": c["name"],
-                        "value": c["value"]
-                    })
-                    if c["name"] == "bili_jct":
-                        csrf = c["value"]
-                logged_in, name = is_login()
-                if logged_in:
-                    print("登录成功：", name)
-                else:
-                    print("登录失败，请重新扫码登录")
-                    loginBili()
-    except FileNotFoundError:
-        print("未登录,请扫码登录")
-        loginBili()
+
+# async def is_login():
+    # global cookies
+    # api = "https://api.bilibili.com/x/web-interface/nav"
+    # req = urllib.request.Request(api)
+    # for c in cookies:
+        # req.add_header("Cookie", f"{c['name']}={c['value']}")
+    # with urllib.request.urlopen(req) as response:
+        # body = response.read().decode()
+        # data = json.loads(body)
+        # return data["code"] == 0, data["data"]["uname"]
 
 
-def is_login():
-    global cookies
-    api = "https://api.bilibili.com/x/web-interface/nav"
-    req = urllib.request.Request(api)
-    for c in cookies:
-        req.add_header("Cookie", f"{c['name']}={c['value']}")
-    with urllib.request.urlopen(req) as response:
-        body = response.read().decode()
-        data = json.loads(body)
-        return data["code"] == 0, data["data"]["uname"]
-
-def signature(data):
-    secret_key = "560c52ccd288fed045859ed18bffd973"
-    keys = sorted(data.keys())
-    sig_str = ""
-    for key in keys:
-        sig_str += f"{key}={data[key]}"
-    sig_str += secret_key
-    m = hashlib.md5()
-    m.update(sig_str.encode("utf-8"))
-    sign = m.hexdigest()
-    data["sign"] = sign
 
 
-def map_to_string(data):
+async def map_to_string(data):
     string = ""
     keys = sorted(data.keys())
     for key in keys:
@@ -83,7 +45,7 @@ def map_to_string(data):
 
 
 
-def is_login():
+async def is_login():
     api = 'https://api.bilibili.com/x/web-interface/nav'
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
@@ -94,14 +56,14 @@ def is_login():
     data = resp.json()
     return data['code'] == 0, data['data']['uname']
 
-def get_tv_qrcode_url_and_auth_code():
+async def get_tv_qrcode_url_and_auth_code():
     api = 'http://passport.bilibili.com/x/passport-tv-login/qrcode/auth_code'
     data = {
         "local_id": "0",
         "ts": str(int(time.time())),
     }
-    signature(data)
-    resp = requests.post(api, data=map_to_string(data), headers={"Content-Type": "application/x-www-form-urlencoded"})
+    await signature(data)
+    resp = requests.post(api, data= await map_to_string(data), headers={"Content-Type": "application/x-www-form-urlencoded"})
     resp_data = resp.json()
     code = resp_data['code']
     if code == 0:
@@ -111,34 +73,22 @@ def get_tv_qrcode_url_and_auth_code():
     else:
         raise Exception('get_tv_qrcode_url_and_auth_code error')
 
-def signature(params):
-    keys = list(params.keys())
-    params["appkey"] = appkey
-    keys.append("appkey")
-    keys.sort()
-    query = ""
-    for k in keys:
-        query += k + "=" + urllib.parse.quote(params[k]) + "&"
-    query += "appseccret"
-    hash = hashlib.md5()
-    hash.update(query.encode("utf-8"))
-    params["sign"] = hash.hexdigest()
 
-def map_to_string(params):
-    query = ""
-    for k, v in params.items():
-        query += k + "=" + v + "&"
-    return query[:-1]
+# async def map_to_string(params):
+    # query = ""
+    # for k, v in params.items():
+        # query += k + "=" + v + "&"
+    # return query[:-1]
 
-def verify_login(auth_code):
+async def verify_login(auth_code):
     api = "http://passport.bilibili.com/x/passport-tv-login/qrcode/poll"
     data = {
         "auth_code": auth_code,
         "local_id": "0",
         "ts": str(int(time.time())),
     }
-    signature(data)
-    data_string = map_to_string(data)
+    await signature(data)
+    data_string = await map_to_string(data)
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
@@ -167,7 +117,7 @@ def verify_login(auth_code):
 appkey = "4409e2ce8ffd12b8"
 appsec = "59b43e04ad6965f34319062b478f83dd"
 
-def signature(params: dict):
+async def signature(params: dict):
     keys = list(params.keys())
     params["appkey"] = appkey
     keys.append("appkey")
@@ -177,11 +127,11 @@ def signature(params: dict):
     hash = hashlib.md5(query.encode("utf-8"))
     params["sign"] = hash.hexdigest()
 
-def map_to_string(params: dict) -> str:
+async def map_to_string(params: dict) -> str:
     query = "&".join([k + "=" + v for k, v in params.items()])
     return query
 
-def draw_QR(login_url):
+async def draw_QR(login_url):
     "绘制二维码"
     qr = qrcode.QRCode(version=1, box_size=10, border=4)
     qr.add_data(login_url)
@@ -191,20 +141,20 @@ def draw_QR(login_url):
     # img.save("qrcode.png")
 
 
-def loginBili():
+async def loginBili():
     
-    login_url, auth_code = get_tv_qrcode_url_and_auth_code()
+    login_url, auth_code = await get_tv_qrcode_url_and_auth_code()
     qrcode_terminal.draw(login_url)
     print("或将此链接复制到手机B站打开:", login_url)
     while True:
-        if verify_login(auth_code):
+        if await verify_login(auth_code):
             print("登录成功！")
             break
         else:
             time.sleep(3)
             print("等待扫码登录中...")
             
-def main():
+async def main():
     loginBili()
     input()
 

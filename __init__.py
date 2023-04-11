@@ -6,9 +6,9 @@ import warnings
 import asyncio
 import aiohttp
 import itertools
-from pathlib import Path
 from .main import *
 from .src import BiliUser
+from .login import *
 
 
 from nonebot import on_command, on_regex,get_driver
@@ -27,11 +27,20 @@ __plugin_meta__ = PluginMetadata(
     },
     )
 
-local_path = Path(__file__).parent
 
-
-print(local_path)
-
+login_in = on_command('blogin',aliases={'b站登录'},block=True)
+@login_in.handle()
+async def _():
+    login_url, auth_code = await get_tv_qrcode_url_and_auth_code()
+    await login_in.send(MessageSegment.image(await draw_QR(login_url)))
+    await login_in.send("或将此链接复制到手机B站打开:", login_url)
+    while True:
+        if await verify_login(auth_code):
+            print("登录成功！")
+            break
+        else:
+            time.sleep(3)
+            print("等待扫码登录中...")
 
 fan_once = on_command('bfan',aliases={'开始刷牌子'},block=True)
 

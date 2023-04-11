@@ -1,13 +1,17 @@
 import json
 import os
 import sys
+import time
 from nonebot.log import logger as log
 import warnings
 import asyncio
 import aiohttp
 import itertools
+from pathlib import Path
 from .src import BiliUser
+local_path = Path(__file__).parent
 
+__VERSION__ = "0.3.6"
 
 warnings.filterwarnings(
     "ignore",
@@ -21,7 +25,7 @@ try:
     else:
         import yaml
 
-        with open('users.yaml', 'r', encoding='utf-8') as f:
+        with open(Path(local_path /'users.yaml'), 'r', encoding='utf-8') as f:
             users = yaml.load(f, Loader=yaml.FullLoader)
     assert users['ASYNC'] in [0, 1], "ASYNC参数错误"
     assert users['LIKE_CD'] >= 0, "LIKE_CD参数错误"
@@ -123,9 +127,9 @@ async def push_message(session, sendkey, message):
     log.info("Server酱已推送")
 
 async def strat_once():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(main())
+    while True:
+        await main()
+        time.sleep(3)
     log.info("任务结束")
         
 if __name__ == '__main__':
