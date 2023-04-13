@@ -1,6 +1,4 @@
 from aiohttp import ClientSession, ClientTimeout
-import sys
-import os
 import asyncio
 import uuid
 from loguru import logger

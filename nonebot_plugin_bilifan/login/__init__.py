@@ -3,10 +3,7 @@ import urllib.parse as urlparse
 import time
 import os
 import shutil
-import requests
-import json
 import yaml
-from http import cookiejar
 import aiohttp , asyncio
 import time
 import hashlib

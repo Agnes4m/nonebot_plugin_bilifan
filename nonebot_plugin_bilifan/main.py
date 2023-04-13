@@ -1,8 +1,5 @@
 import json
 import os
-import shutil
-import sys
-import time
 from nonebot.log import logger as log
 import warnings
 import asyncio

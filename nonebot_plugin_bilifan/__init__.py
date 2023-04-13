@@ -1,11 +1,11 @@
-from nonebot.log import logger
 from pathlib import Path
+import shutil
 from .main import *
 from .src import BiliUser
 
 from .login import get_tv_qrcode_url_and_auth_code,draw_QR,verify_login
 
-
+from nonebot.log import logger
 from nonebot import on_command
 from nonebot.adapters.onebot.v11 import MessageSegment,MessageEvent
 from nonebot.plugin import PluginMetadata
