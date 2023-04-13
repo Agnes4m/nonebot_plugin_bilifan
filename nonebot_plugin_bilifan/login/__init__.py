@@ -113,10 +113,10 @@ async def verify_login(auth_code,data_path):
             if not os.path.exists(data_path/'users.yaml'):
                 logger.info('初始化配置文件')
                 shutil.copy2(Path().joinpath('data/bilifan/users.yaml'), data_path/'users.yaml')
-            with open('data_path/users.yaml', 'r', encoding='utf-8') as f:
+            with open(data_path/'users.yaml', 'r', encoding='utf-8') as f:
                 config = yaml.safe_load(f)
             config['USERS'][0]['access_key'] = access_key
-            with open('data_path/users.yaml', 'w', encoding='utf-8') as f:
+            with open(data_path/'users.yaml', 'w', encoding='utf-8') as f:
                 yaml.dump(config, f, allow_unicode=True, default_flow_style=False)
             return "access_key已保存"
         else:
