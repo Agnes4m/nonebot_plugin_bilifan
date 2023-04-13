@@ -8,11 +8,7 @@
 
 # nonebot_plugin_bilifan
 _✨自动b站粉丝牌✨_
-<div align = "center">
-        <a href="https://github.com/Agnes4m/nonebot_plugin_bilifan/wiki/%E6%96%87%E6%A1%A3" target="_blank">文档</a> &nbsp; · &nbsp;
-        <a href="https://github.com/Agnes4m/nonebot_plugin_bilifan/wiki/%E6%96%87%E6%A1%A3#zl" target="_blank">指令列表</a> &nbsp; · &nbsp;
-        <a href="https://github.com/Agnes4m/nonebot_plugin_bilifan/wiki/BUG%E5%8F%8D%E9%A6%88">常见问题</a>
-</div><br>
+
 <a href="https://github.com/Agnes4m/nonebot_plugin_bilifan/stargazers">
         <img alt="GitHub stars" src="https://img.shields.io/github/stars/Agnes4m/nonebot_plugin_bilifan" alt="stars">
 </a>
