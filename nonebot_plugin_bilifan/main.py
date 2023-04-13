@@ -59,52 +59,55 @@ async def read_yaml(msg_path:Path):
 async def main(msg_path):
     await read_yaml(msg_path)
     messageList = []
-    session = aiohttp.ClientSession()
-    try:
-        log.warning("当前版本为: " + __VERSION__)
-        resp = await (
-            await session.get(
+    async with aiohttp.ClientSession() as session:
+        try:
+            log.warning("当前版本为: " + __VERSION__)
+            resp = await session.get(
                 "http://version.fansmedalhelper.1961584514352337.cn-hangzhou.fc.devsapp.net/"
             )
-        ).json()
-        if resp['version'] != __VERSION__:
-            log.warning("新版本为: " + resp['version'] + ",请更新")
-            log.warning("更新内容: " + resp['changelog'])
-            messageList.append(f"当前版本: {__VERSION__} ,最新版本: {resp['version']}")
-            messageList.append(f"更新内容: {resp['changelog']} ")
-        if resp['notice']:
-            log.warning("公告: " + resp['notice'])
-            messageList.append(f"公告: {resp['notice']}")
-    except Exception as ex:
-        messageList.append(f"检查版本失败，{ex}")
-        log.warning(f"检查版本失败，{ex}")
-    initTasks = []
-    startTasks = []
-    catchMsg = []
+            data = await resp.json()
+            if data['version'] != __VERSION__:
+                log.warning("新版本为: " + data['version'] + ",请更新")
+                log.warning("更新内容: " + data['changelog'])
+                messageList.append(f"当前版本: {__VERSION__} ,最新版本: {data['version']}")
+                messageList.append(f"更新内容: {data['changelog']} ")
+            if data['notice']:
+                log.warning("公告: " + data['notice'])
+                messageList.append(f"公告: {data['notice']}")
+        except Exception as ex:
+            messageList.append(f"检查版本失败，{ex}")
+            log.warning(f"检查版本失败，{ex}")
+    init_tasks = []
+    start_tasks = []
+    catch_msg = []
+
     for user in users['USERS']:
         if user['access_key']:
-            biliUser = BiliUser(
-                user['access_key'],
-                user.get('white_uid', ''),
-                user.get('banned_uid', ''),
-                config,
-            )
-            initTasks.append(biliUser.init())
-            startTasks.append(biliUser.start())
-            catchMsg.append(biliUser.sendmsg())
+            bili_user = BiliUser(user['access_key'], user.get('white_uid', ''), user.get('banned_uid', ''), config)
+            init_tasks.append(bili_user.init())
+            start_tasks.append(bili_user.start())
+            catch_msg.append(bili_user.sendmsg())
+
     try:
-        await asyncio.gather(*initTasks)
-        await asyncio.gather(*startTasks)
+        await asyncio.gather(*init_tasks)
+        await asyncio.gather(*start_tasks)
     except Exception as e:
         log.exception(e)
-        # messageList = messageList + list(itertools.chain.from_iterable(await asyncio.gather(*catchMsg)))
-        messageList.append(f"任务执行失败: {e}")
-    finally:
-        messageList = messageList + list(
-            itertools.chain.from_iterable(await asyncio.gather(*catchMsg))
-        )
-    [log.info(message) for message in messageList]
-    return messageList
+        message_list = [f"任务执行失败: {e}"]
+    else:
+        message_list = []
+
+    try:
+        catch_msg_results = await asyncio.gather(*catch_msg)
+    except Exception as e:
+        log.exception(e)
+        message_list.append(f"发送消息失败: {e}")
+    else:
+        message_list += list(itertools.chain.from_iterable(catch_msg_results))
+
+    [log.info(message) for message in message_list]
+    return message_list
+
 
 
 def run(*args, **kwargs):
@@ -112,12 +115,6 @@ def run(*args, **kwargs):
     loop.run_until_complete(main())
     log.info("任务结束，等待下一次执行。")
 
-
-async def push_message(session, sendkey, message):
-    url = f"https://sctapi.ftqq.com/{sendkey}.send"
-    data = {"title": f"【B站粉丝牌助手推送】", "desp": message}
-    await session.post(url, data=data)
-    log.info("Server酱已推送")
 
         
 # if __name__ == '__main__':

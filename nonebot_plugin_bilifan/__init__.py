@@ -28,7 +28,10 @@ login_in = on_command('blogin',aliases={'b站登录'},block=False)
 
 @login_in.handle()
 async def _(event:MessageEvent):
-    login_url, auth_code = await get_tv_qrcode_url_and_auth_code()
+    try:
+        login_url, auth_code = await get_tv_qrcode_url_and_auth_code()
+    except aiohttp.client_exceptions.ClientTimeoutError:
+        await login_in.finish("已超时，请稍后重试！")
     data_path = Path().joinpath(f'data/bilifan/{event.user_id}')
     data_path.mkdir(parents=True, exist_ok=True)
     data = await draw_QR(login_url)

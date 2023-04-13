@@ -7,7 +7,7 @@ import requests
 import json
 import yaml
 from http import cookiejar
-import requests
+import aiohttp , asyncio
 import time
 import hashlib
 import urllib.parse as urlparse
@@ -17,47 +17,27 @@ from pathlib import Path
 import qrcode
 from nonebot.log import logger
 
-Cookies = cookiejar.CookieJar()
-session = requests.Session()
-session.cookies = Cookies
+# Cookies = cookiejar.CookieJar()
+# session = requests.Session()
+# session.cookies = Cookies
 
 csrf = ""
 access_key = ""
 base_path = Path().joinpath('data/bilifan')
 
-# async def is_login():
-    # global cookies
-    # api = "https://api.bilibili.com/x/web-interface/nav"
-    # req = urllib.request.Request(api)
-    # for c in cookies:
-        # req.add_header("Cookie", f"{c['name']}={c['value']}")
-    # with urllib.request.urlopen(req) as response:
-        # body = response.read().decode()
-        # data = json.loads(body)
-        # return data["code"] == 0, data["data"]["uname"]
 
 
 
-
-async def map_to_string(data):
-    string = ""
-    keys = sorted(data.keys())
-    for key in keys:
-        string += f"{key}={data[key]}&"
-    return string[:-1]
-
-
-
-async def is_login():
+async def is_login(session, cookies):
     api = 'https://api.bilibili.com/x/web-interface/nav'
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
-    session = requests.Session()
-    for c in Cookies:
-        session.cookies.set(c['name'], c['value'])
-    resp = session.get(api, headers=headers)
-    data = resp.json()
-    return data['code'] == 0, data['data']['uname']
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+    }
+    async with session.get(api, headers=headers, cookies=cookies) as resp:
+        data = await resp.json()
+        return data['code'] == 0, data['data']['uname']
+
+
 
 async def get_tv_qrcode_url_and_auth_code():
     api = 'http://passport.bilibili.com/x/passport-tv-login/qrcode/auth_code'
@@ -66,22 +46,19 @@ async def get_tv_qrcode_url_and_auth_code():
         "ts": str(int(time.time())),
     }
     await signature(data)
-    resp = requests.post(api, data= await map_to_string(data), headers={"Content-Type": "application/x-www-form-urlencoded"})
-    resp_data = resp.json()
-    code = resp_data['code']
-    if code == 0:
-        qrcode_url = resp_data['data']['url']
-        auth_code = resp_data['data']['auth_code']
-        return qrcode_url, auth_code
-    else:
-        raise Exception('get_tv_qrcode_url_and_auth_code error')
+    async with aiohttp.ClientSession() as session:
+        async with session.post(api, data=await map_to_string(data), headers={"Content-Type": "application/x-www-form-urlencoded"}) as resp:
+            resp_data = await resp.json()
+            code = resp_data['code']
+            if code == 0:
+                qrcode_url = resp_data['data']['url']
+                auth_code = resp_data['data']['auth_code']
+                return qrcode_url, auth_code
+            else:
+                raise Exception('get_tv_qrcode_url_and_auth_code error')
 
 
-# async def map_to_string(params):
-    # query = ""
-    # for k, v in params.items():
-        # query += k + "=" + v + "&"
-    # return query[:-1]
+
 
 async def verify_login(auth_code,data_path):
     api = "http://passport.bilibili.com/x/passport-tv-login/qrcode/poll"
@@ -96,31 +73,33 @@ async def verify_login(auth_code,data_path):
         "Content-Type": "application/x-www-form-urlencoded",
     }
     while True:
-        resp = requests.post(api, headers=headers, data=data_string)
-        if resp.status_code != 200:
-            raise Exception("Failed to connect to server")
-        response_dict = json.loads(resp.text)
-        code = response_dict["code"]
-        try:
-            access_key = response_dict["data"]["access_token"]
-        except:
-            time.sleep(3)
+        async with aiohttp.ClientSession() as session:
+            async with session.post(api, headers=headers, data=data_string) as resp:
+                if resp.status != 200:
+                    raise Exception("Failed to connect to server")
+                response_dict = await resp.json()
+                code = response_dict["code"]
+                try:
+                    access_key = response_dict["data"]["access_token"]
+                except:
+                    await asyncio.sleep(3)
             
-        if code == 0:
-            logger.success("登录成功")
-            with open(data_path/"login_info.txt", "w") as f:
-                f.write(access_key)
-            if not os.path.exists(data_path/'users.yaml'):
-                logger.info('初始化配置文件')
-                shutil.copy2(Path().joinpath('data/bilifan/users.yaml'), data_path/'users.yaml')
-            with open(data_path/'users.yaml', 'r', encoding='utf-8') as f:
-                config = yaml.safe_load(f)
-            config['USERS'][0]['access_key'] = access_key
-            with open(data_path/'users.yaml', 'w', encoding='utf-8') as f:
-                yaml.dump(config, f, allow_unicode=True, default_flow_style=False)
-            return "access_key已保存"
-        else:
-            time.sleep(3)
+            if code == 0:
+                logger.success("登录成功")
+                with open(data_path/"login_info.txt", "w") as f:
+                    f.write(access_key)
+                if not os.path.exists(data_path/'users.yaml'):
+                    logger.info('初始化配置文件')
+                    shutil.copy2(Path().joinpath('data/bilifan/users.yaml'), data_path/'users.yaml')
+                with open(data_path/'users.yaml', 'r', encoding='utf-8') as f:
+                    config = yaml.safe_load(f)
+                config['USERS'][0]['access_key'] = access_key
+                with open(data_path/'users.yaml', 'w', encoding='utf-8') as f:
+                    yaml.dump(config, f, allow_unicode=True, default_flow_style=False)
+                return "access_key已保存"
+            else:
+                time.sleep(3)
+
 
 appkey = "4409e2ce8ffd12b8"
 appsec = "59b43e04ad6965f34319062b478f83dd"
