@@ -9,13 +9,14 @@ from .login import get_tv_qrcode_url_and_auth_code,draw_QR,verify_login
 
 from nonebot.log import logger
 from nonebot import on_command
-from nonebot import require,get_bot
+from nonebot import require,get_bot,get_driver
 from nonebot.matcher import Matcher
 from nonebot.adapters.onebot.v11 import MessageSegment,MessageEvent,Message,GroupMessageEvent,PrivateMessageEvent
 from nonebot.params import CommandArg,RawCommand,CommandStart
 from nonebot.plugin import PluginMetadata
 try:
-    scheduler = require("nonebot_plugin_apscheduler").scheduler
+    require("nonebot_plugin_apscheduler").scheduler
+    from nonebot_plugin_apscheduler import scheduler
 except BaseException:
     scheduler = None
 
@@ -25,7 +26,7 @@ logger.opt(colors=True).info(
     else "未检测到软依赖<y>nonebot_plugin_apscheduler</y>，<r>禁用定时任务功能</r>"
 )
 
-
+driver = get_driver()
 __version__ = "0.0.1"
 __plugin_meta__ = PluginMetadata(
     name="bilifan",
@@ -80,15 +81,18 @@ async def _(matcher:Matcher,event:MessageEvent):
     data_path = Path().joinpath(f'data/bilifan/{event.user_id}')
     data_path.mkdir(parents=True, exist_ok=True)
     msg_path = Path().joinpath(f'data/bilifan/{event.user_id}/login_info.txt')
-    if msg_path.is_file:
-        logger.info(msg_path)
-        await matcher.send('开始执行~')
-    else:
-        logger.info(msg_path)
+    try:
+        if msg_path.is_file:
+            logger.info(msg_path)
+            await matcher.send('开始执行~')
+        else:
+            logger.info(msg_path)
+            await matcher.finish('你尚未登录，请输入【b站登录】')
+        messageList = await main(msg_path.parent)
+        message_str = '\n'.join(messageList)
+        await matcher.finish(message_str)
+    except asyncio.exceptions.CancelledError :
         await matcher.finish('你尚未登录，请输入【b站登录】')
-    messageList = await main(msg_path.parent)
-    await matcher.finish(msg for msg in messageList)
-    
 
     
    
@@ -105,7 +109,8 @@ def save_config(data):
         yaml.safe_dump(data, f, allow_unicode=True, default_flow_style=False)
 
     
-fan_once = on_command('bfan',aliases={'自动粉丝牌'},block=False)
+fan_once = on_command('addfan',aliases={'自动粉丝牌'},priority=40,block=False)
+@fan_once.handle()
 async def _(matcher:Matcher,event:MessageEvent,start:str = CommandStart(),command: str = RawCommand()):
     if start:
         command = command.replace(start,'')
@@ -114,11 +119,13 @@ async def _(matcher:Matcher,event:MessageEvent,start:str = CommandStart(),comman
         group_id = event.group_id
     else:
         group_id = event.user_id
-    if config[event.user_id]:
+    if event.user_id in config:
         del config[event.user_id]
+        save_config(config)
         await matcher.finish(f'已删除{event.user_id}的定时任务')
     else:
         config[event.user_id] = group_id
+        save_config(config)
         await matcher.finish(f'已增加{event.user_id}的定时任务，每天0点执行')
         
         
@@ -133,9 +140,9 @@ async def auto_cup():
             logger.warning('usr_id尚未登录，已忽略')
             continue
         messageList = await main(msg_path.parent)
-        count += 1
+        message_str = '\n'.join(messageList)
         if user_id == group_id:
-            await get_bot().send_private_msg(user_id=user_id, message=messageList)
+            await get_bot().send_private_msg(user_id=user_id, message=message_str)
             continue
         else:
             count_value = count.get(group_id, 0)
@@ -144,4 +151,12 @@ async def auto_cup():
         for group_id,num in count.items():
             await get_bot().send_group_msg(group_id=group_id, message=f'今日已完成{num}个自动刷牌子任务')
 
-scheduler.add_job(auto_cup, "cron", hour="0", id="auto_cup")
+@driver.on_bot_connect
+async def _():
+    users = await read_yaml(Path().joinpath('data/bilifan'))
+    cron = users.get('CRON', None)
+    try:
+        fields = cron.split(" ")
+    except AttributeError:
+        logger.error('定时格式不正确，不启用定时功能')
+    scheduler.add_job(auto_cup, "cron", hour=fields[0], minute=fields[1],id="auto_cup")

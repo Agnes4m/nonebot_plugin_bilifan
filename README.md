@@ -41,9 +41,9 @@ _✨自动b站粉丝牌✨_
 
 ## 🙈 其他
 
-+ 本人技术很差，如果您有发现BUG或者更好的建议，欢迎提Issue & Pr
 + 如果本插件对你有帮助，不要忘了点个Star~
 + 本项目仅供学习使用，请勿用于商业用途
++ [爱发电](https://afdian.net/a/agnes_digital)
 + [GPL-3.0 License](https://github.com/Agnes4m/nonebot_plugin_bilifan/blob/main/LICENSE) ©[@Agnes4m](https://github.com/Agnes4m)
         
 

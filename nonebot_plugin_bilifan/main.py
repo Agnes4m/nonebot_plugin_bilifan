@@ -50,30 +50,11 @@ async def read_yaml(msg_path:Path):
     except Exception as e:
         log.error(f"读取配置文件失败,请检查配置文件格式是否正确: {e}")
         exit(1)
-
+    return users
 
 @log.catch
 async def main(msg_path):
     await read_yaml(msg_path)
-    messageList = []
-    async with aiohttp.ClientSession() as session:
-        try:
-            log.warning("当前版本为: " + __VERSION__)
-            resp = await session.get(
-                "http://version.fansmedalhelper.1961584514352337.cn-hangzhou.fc.devsapp.net/"
-            )
-            data = await resp.json()
-            if data['version'] != __VERSION__:
-                log.warning("新版本为: " + data['version'] + ",请更新")
-                log.warning("更新内容: " + data['changelog'])
-                messageList.append(f"当前版本: {__VERSION__} ,最新版本: {data['version']}")
-                messageList.append(f"更新内容: {data['changelog']} ")
-            if data['notice']:
-                log.warning("公告: " + data['notice'])
-                messageList.append(f"公告: {data['notice']}")
-        except Exception as ex:
-            messageList.append(f"检查版本失败，{ex}")
-            log.warning(f"检查版本失败，{ex}")
     init_tasks = []
     start_tasks = []
     catch_msg = []
