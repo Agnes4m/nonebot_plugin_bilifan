@@ -27,7 +27,7 @@ logger.opt(colors=True).info(
 )
 
 driver = get_driver()
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __plugin_meta__ = PluginMetadata(
     name="bilifan",
     description='b站粉丝牌~',
@@ -91,7 +91,7 @@ async def _(matcher:Matcher,event:MessageEvent):
         messageList = await main(msg_path.parent)
         message_str = '\n'.join(messageList)
         await matcher.finish(message_str)
-    except asyncio.exceptions.CancelledError :
+    except (FileNotFoundError,SystemExit):
         await matcher.finish('你尚未登录，请输入【b站登录】')
 
     
@@ -159,4 +159,5 @@ async def _():
         fields = cron.split(" ")
     except AttributeError:
         logger.error('定时格式不正确，不启用定时功能')
+        return
     scheduler.add_job(auto_cup, "cron", hour=fields[0], minute=fields[1],id="auto_cup")
