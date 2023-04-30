@@ -8,6 +8,7 @@ from .src import BiliUser
 from .login import get_tv_qrcode_url_and_auth_code,draw_QR,verify_login
 
 from nonebot.log import logger
+from nonebot.permission import SUPERUSER
 from nonebot import on_command
 from nonebot import require,get_bot,get_driver
 from nonebot.matcher import Matcher
@@ -108,6 +109,8 @@ def save_config(data):
     with CONFIG_PATH.open('w', encoding='utf-8') as f:
         yaml.safe_dump(data, f, allow_unicode=True, default_flow_style=False)
 
+
+
     
 fan_once = on_command('addfan',aliases={'自动粉丝牌'},priority=40,block=False)
 @fan_once.handle()
@@ -156,6 +159,14 @@ async def auto_cup():
         for group_id,num in count.items():
             await get_bot().send_group_msg(group_id=group_id, message=f'今日已完成{num}个自动刷牌子任务')
 
+del_all = on_command('bdel',aliases={'删除全部刷牌子'},block=False,permission=SUPERUSER)
+@del_all.handle()
+async def _(matcher:Matcher):
+    msg_path = Path().joinpath('data/bilifan/config.yaml')
+    os.remove(msg_path)
+    matcher.finish('已删除全部定时刷牌子任务')
+
+
 @driver.on_bot_connect
 async def _():
     users = await read_yaml(Path().joinpath('data/bilifan'))
@@ -166,3 +177,4 @@ async def _():
         logger.error('定时格式不正确，不启用定时功能')
         return
     scheduler.add_job(auto_cup, "cron", hour=fields[0], minute=fields[1],id="auto_cup")
+    
