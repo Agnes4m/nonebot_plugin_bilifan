@@ -27,7 +27,7 @@ logger.opt(colors=True).info(
 )
 
 driver = get_driver()
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __plugin_meta__ = PluginMetadata(
     name="bilifan",
     description='b站粉丝牌~',
@@ -119,14 +119,19 @@ async def _(matcher:Matcher,event:MessageEvent,start:str = CommandStart(),comman
         group_id = event.group_id
     else:
         group_id = event.user_id
-    if event.user_id in config:
-        del config[event.user_id]
-        save_config(config)
-        await matcher.finish(f'已删除{event.user_id}的定时任务')
+        
+    msg_path = Path().joinpath(f'data/bilifan/{event.user_id}/login_info.txt')   
+    if msg_path.is_file: 
+        if event.user_id in config:
+            del config[event.user_id]
+            save_config(config)
+            await matcher.finish(f'已删除{event.user_id}的定时任务')
+        else:
+            config[event.user_id] = group_id
+            save_config(config)
+            await matcher.finish(f'已增加{event.user_id}的定时任务，每天0点执行')
     else:
-        config[event.user_id] = group_id
-        save_config(config)
-        await matcher.finish(f'已增加{event.user_id}的定时任务，每天0点执行')
+        await matcher.finish('你尚未登录，请输入【b站登录】')
         
         
 async def auto_cup():
