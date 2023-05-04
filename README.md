@@ -25,28 +25,26 @@ _✨自动b站粉丝牌✨_
     <img src="https://img.shields.io/badge/nonebot-2.0.0rc4-red.svg" alt="NoneBot">
 </div>
 
-
 ## 配置
 
 启动一次插件，在bot路径下，"data/bilifan"文件夹内，按需求修改"users.yaml"文件
 
 ## 指令
 
- - b站登录 - 返回b站二维码，扫码登录，绑定qq号
- - 开始刷牌子 - 开始执行命令
- - 自动刷牌子 - 添加或取消定时任务
- - 删除全部刷牌子 - [超管]删除全部的定时任务
+- b站登录 - 返回b站二维码，扫码登录，绑定qq号
+- 开始刷牌子 - 开始执行命令
+- 自动刷牌子 - 添加或取消定时任务
+- 取消自动刷牌子 - 取消定时任务
+- 删除全部的定时任务 - [超管]删除全部的定时任务
 
 
 </details>
 
 ## 🙈 其他
 
-+ 如果本插件对你有帮助，不要忘了点个Star~
-+ 本项目仅供学习使用，请勿用于商业用途
-+ [爱发电](https://afdian.net/a/agnes_digital)
-+ [GPL-3.0 License](https://github.com/Agnes4m/nonebot_plugin_bilifan/blob/main/LICENSE) ©[@Agnes4m](https://github.com/Agnes4m)
-        
+- 本项目仅供学习使用，请勿用于商业用途
+- [爱发电](https://afdian.net/a/agnes_digital)
+- [GPL-3.0 License](https://github.com/Agnes4m/nonebot_plugin_bilifan/blob/main/LICENSE) ©[@Agnes4m](https://github.com/Agnes4m)
 
 ## 🌐 感谢
 
