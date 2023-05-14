@@ -36,11 +36,7 @@ __plugin_meta__ = PluginMetadata(
     },
     )
 
-
-
-        
 login_in = on_command('blogin',aliases={'b站登录'},block=False)
-
 @login_in.handle()
 async def _(matcher:Matcher,event:MessageEvent):
     try:
@@ -63,17 +59,35 @@ async def _(matcher:Matcher,event:MessageEvent):
         else:
             await matcher.finish("登录失败！")
 
-fan_once = on_command('bfan',aliases={'开始刷牌子'},block=False)
+login_del = on_command('blogin_del',aliases={'删除登录信息'},block=False)
+@login_del.handle()
+async def _(matcher:Matcher,event:MessageEvent):
+    config = load_config()
+    msg_path = Path().joinpath(f'data/bilifan/{event.user_id}/login_info.txt')   
+    if msg_path.is_file(): 
+        if event.user_id in config:
+            del config[event.user_id]
+            save_config(config)
+            logger.info(f'已删除{event.user_id}的定时任务')
+    try:
+        data_path = Path().joinpath(f'data/bilifan/{event.user_id}')
+        shutil.rmtree(data_path)
+        await matcher.finish(f'已删除{event.user_id}的所有登录信息')
+    except (FileNotFoundError,SystemExit):
+        await matcher.finish('你尚未登录，无法删除登录信息')
 
+fan_once = on_command('bfan',aliases={'开始刷牌子'},block=False)
 @fan_once.handle()
 async def _(matcher:Matcher,event:MessageEvent):
     data_path = Path().joinpath(f'data/bilifan/{event.user_id}')
     data_path.mkdir(parents=True, exist_ok=True)
     msg_path = Path().joinpath(f'data/bilifan/{event.user_id}/login_info.txt')
     try:
-        if msg_path.is_file:
+        if msg_path.is_file():
             logger.info(msg_path)
-            await matcher.send('开始执行~')
+            users = await read_yaml(Path().joinpath('data/bilifan'))
+            watchinglive = users.get('WATCHINGLIVE', None)
+            await matcher.send(f'开始执行，预计将在{watchinglive}分钟后完成~')
         else:
             logger.info(msg_path)
             await matcher.finish('你尚未登录，请输入【b站登录】')
@@ -83,11 +97,6 @@ async def _(matcher:Matcher,event:MessageEvent):
     except (FileNotFoundError,SystemExit):
         await matcher.finish('你尚未登录，请输入【b站登录】')
 
-    
-   
-
-
-    
 fan_once = on_command('addfan',aliases={'自动粉丝牌'},priority=40,block=False)
 @fan_once.handle()
 async def _(matcher:Matcher,event:MessageEvent):
@@ -98,38 +107,36 @@ async def _(matcher:Matcher,event:MessageEvent):
         group_id = event.user_id
         
     msg_path = Path().joinpath(f'data/bilifan/{event.user_id}/login_info.txt')   
-    if msg_path.is_file: 
+    if msg_path.is_file(): 
         if event.user_id in config:
-            del config[event.user_id]
-            save_config(config)
-            await matcher.finish(f'已删除{event.user_id}的定时任务')
+            await matcher.finish(f'{event.user_id}的定时任务已存在')
         else:
             config[event.user_id] = group_id
             save_config(config)
-            await matcher.finish(f'已增加{event.user_id}的定时任务，每天0点执行')
+            users = await read_yaml(Path().joinpath('data/bilifan'))
+            cron = users.get('CRON', None)
+            try:
+                fields = cron.split(" ")
+                await matcher.finish(f'已增加{event.user_id}的定时任务，将在每天{fields[0]}时{fields[1]}分开始执行~')
+            except AttributeError:
+                await matcher.finish('定时格式不正确，无法设置定时任务')
     else:
         await matcher.finish('你尚未登录，请输入【b站登录】')
-        
-        
-
 
 del_only = on_command('bdel',aliases={'取消自动粉丝牌'},block=False)
 @del_only.handle()
 async def _(matcher:Matcher,event:MessageEvent):
     config = load_config()
-    if isinstance(event, GroupMessageEvent):
-        group_id = event.group_id
-    else:
-        group_id = event.user_id
-        
     msg_path = Path().joinpath(f'data/bilifan/{event.user_id}/login_info.txt')   
-    if msg_path.is_file: 
+    if msg_path.is_file(): 
         if event.user_id in config:
             del config[event.user_id]
             save_config(config)
             await matcher.finish(f'已删除{event.user_id}的定时任务')
+        else:
+            await matcher.finish(f'{event.user_id}未设置定时任务')
 
-del_all = on_command('bdel_all',aliases={'删除全部的定时任务'},block=False,permission=SUPERUSER)
+del_all = on_command('bdel_all',aliases={'删除全部定时任务'},block=False,permission=SUPERUSER)
 @del_all.handle()
 async def _(matcher:Matcher):
     msg_path = Path().joinpath('data/bilifan/config.yaml')
@@ -146,5 +153,5 @@ async def _():
     except AttributeError:
         logger.error('定时格式不正确，不启用定时功能')
         return
-    scheduler.add_job(auto_cup, "cron", hour=fields[0], minute=fields[1],id="auto_cup")
+    scheduler.add_job(auto_cup, "cron", hour=fields[0], minute=fields[1], id="auto_cup")
     
