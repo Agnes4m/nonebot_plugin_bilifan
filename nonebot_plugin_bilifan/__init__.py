@@ -25,7 +25,7 @@ logger.opt(colors=True).info(
 )
 
 driver = get_driver()
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 __plugin_meta__ = PluginMetadata(
     name="bilifan",
     description='b站粉丝牌~',
@@ -37,6 +37,12 @@ __plugin_meta__ = PluginMetadata(
     )
 
 login_in = on_command('blogin',aliases={'b站登录'},block=False)
+login_del = on_command('blogin_del',aliases={'删除登录信息'},block=False)
+fan_once = on_command('bfan',aliases={'开始刷牌子','开始粉丝牌'},block=False)
+fan_once = on_command('addfan',aliases={'自动刷牌子','自动粉丝牌'},priority=40,block=False)
+del_only = on_command('bdel',aliases={'取消自动刷牌子','取消自动粉丝牌'},block=False)
+del_all = on_command('bdel_all',aliases={'删除全部定时任务'},block=False,permission=SUPERUSER)
+
 @login_in.handle()
 async def _(matcher:Matcher,event:MessageEvent):
     try:
@@ -59,7 +65,7 @@ async def _(matcher:Matcher,event:MessageEvent):
         else:
             await matcher.finish("登录失败！")
 
-login_del = on_command('blogin_del',aliases={'删除登录信息'},block=False)
+
 @login_del.handle()
 async def _(matcher:Matcher,event:MessageEvent):
     config = load_config()
@@ -76,7 +82,7 @@ async def _(matcher:Matcher,event:MessageEvent):
     except (FileNotFoundError,SystemExit):
         await matcher.finish('你尚未登录，无法删除登录信息')
 
-fan_once = on_command('bfan',aliases={'开始刷牌子'},block=False)
+
 @fan_once.handle()
 async def _(matcher:Matcher,event:MessageEvent):
     data_path = Path().joinpath(f'data/bilifan/{event.user_id}')
@@ -97,7 +103,7 @@ async def _(matcher:Matcher,event:MessageEvent):
     except (FileNotFoundError,SystemExit):
         await matcher.finish('你尚未登录，请输入【b站登录】')
 
-fan_once = on_command('addfan',aliases={'自动粉丝牌'},priority=40,block=False)
+
 @fan_once.handle()
 async def _(matcher:Matcher,event:MessageEvent):
     config = load_config()
@@ -123,7 +129,7 @@ async def _(matcher:Matcher,event:MessageEvent):
     else:
         await matcher.finish('你尚未登录，请输入【b站登录】')
 
-del_only = on_command('bdel',aliases={'取消自动粉丝牌'},block=False)
+
 @del_only.handle()
 async def _(matcher:Matcher,event:MessageEvent):
     config = load_config()
@@ -136,7 +142,7 @@ async def _(matcher:Matcher,event:MessageEvent):
         else:
             await matcher.finish(f'{event.user_id}未设置定时任务')
 
-del_all = on_command('bdel_all',aliases={'删除全部定时任务'},block=False,permission=SUPERUSER)
+
 @del_all.handle()
 async def _(matcher:Matcher):
     msg_path = Path().joinpath('data/bilifan/config.yaml')
