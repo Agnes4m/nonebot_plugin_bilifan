@@ -6,6 +6,7 @@ import asyncio
 
 from nonebot.log import logger
 from nonebot import get_bot
+from nonebot.adapters.onebot.v11 import Bot
 
 from .main import main
 
@@ -67,3 +68,21 @@ async def auto_cup():
             else:
                 count_value = count.get(group_id, 0)
                 count[group_id] = count_value + 1 
+                
+def render_forward_msg(msg_list: list, uid=2711142767, name='宁宁',bot:Bot = None):
+    try:
+        uid = bot.self_id
+        name = list(bot.config.nickname)[0]
+    except Exception as e:
+        logger.warning(f'获取bot信息错误\n{e}')
+    forward_msg = []
+    for msg in msg_list:
+        forward_msg.append({
+            "type": "node",
+            "data": {
+                "name": str(name),
+                "uin": str(uid),
+                "content": msg
+            }
+        })
+    return forward_msg

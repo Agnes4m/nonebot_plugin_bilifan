@@ -8,9 +8,12 @@ from .login import get_tv_qrcode_url_and_auth_code,draw_QR,verify_login
 from nonebot.log import logger
 from nonebot.permission import SUPERUSER
 from nonebot import on_command
-from nonebot import require,get_bot,get_driver
+from nonebot import require,get_driver
 from nonebot.matcher import Matcher
-from nonebot.adapters.onebot.v11 import MessageSegment,MessageEvent,Message,GroupMessageEvent,PrivateMessageEvent
+from nonebot.adapters.onebot.v11 import (
+    MessageSegment,MessageEvent,Message,
+    GroupMessageEvent,PrivateMessageEvent,
+    Bot)
 from nonebot.plugin import PluginMetadata
 try:
     require("nonebot_plugin_apscheduler").scheduler
@@ -25,16 +28,53 @@ logger.opt(colors=True).info(
 )
 
 driver = get_driver()
-__version__ = "0.1.4"
+__version__ = "0.2.0"
 __plugin_meta__ = PluginMetadata(
     name="bilifan",
     description='b站粉丝牌~',
-    usage='自动刷b站粉丝牌',
+    usage="""
+    ......                  ` .]]@@@@@@@@@@@@@@@@@@@@@@@@@@@@@OO^       
+    ......                ,/@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@OO^       
+    ......            /O@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@OO^       
+    `.....           ,@^=.OOO\/\@@@@@@@@@@@@@@@@@@@@OO//@@@@@/OO\]]]OO\]
+    ``....          ,@@/=^OOOOOOOO@@@@@@@@@@@\]OOOOOOO^^=@@@@OOOOOOOOOOO
+    `.....          O@O^==OOOOOOOO@@@/.,@@@OOOOOOOOOOO\O,@@@@OOOOOOOOO@@
+    ......    ,    .@@@^=`OOOOOOOOO/  ,O@@OOOOOOOOOOOOOO.O@@@OO/[[[[[[[.
+    ......    =..,//@@@^=`OOOOOOOOO@.*=@@@OOOOOOOOOOOOOO]@@@OOO.     ,/`
+    ......    =.\O]`,@O^\=OOOO@@@@@@O`=@@@@@@@OOOOOOOO*O,OO^....[[``]./]
+    ......    ,^.oOoO@O^=,OO@@@@@OoO`\O\OO@@@@OOOOOOOOO]@@^.]]]/OOOo.,OO
+    ......     =.=OOOO@@@@/[[=/.^,/....*.=^,[O@@@@OOOO.@@OOOOOOOOO/..OOO
+    ......      \.\OO`.,....*`.=.^.......=....=@O[\@@O@@[^ ,`.=Oo*.,OOO/
+    ......       ,@,`...  ....=^/......../....=/O^....\..O]/[\O[*]/OOO. 
+    ......       ]@^.,....*..=O\^........^..*.O.\O.^..=^\..,\/\@OOO[.   
+    ......    ,,`O^.,..../.,O`//........=..=`=^.=O`O..=^..OOO*/OOO.     
+    ......   .=.=@..^...=^/O`*OO.]...o**\.,/=^...O^@^..^...OO^=`OOO`    
+    ......  `=.,O^./.*.,OO`,.,/@/.*,O`,O*/@/`....\O\^......Oo^.^,OOO.   
+    ...... .,`.o=^=^.../`...]/`***/O^/@oO@`..[[[[\/=\......O^^...=OO^   
+    ......  ^.=`O^O.*.=\],]]]/\O/\@O[=O/`        =.=O....=^O^*....OOO.  
+    ...... =../=OO^.*.=@@[[,@@@\ .. ..    ,\@@@@@] =O...`=^@`.....=OO^  
+    ...... `..^=OO^.^,@`  ^ =oO\          .O\O@\.,\@@..,^OoO......=OOO. 
+    ...... ^...=OO^.^.@^ =^*=^,O          \..Ooo^  ,@..=OOOO..*....OOO. 
+    ...... ^...=o@^.`.O@. .  ... .. ....  ^.*`.*^  =^..o@oO@*.=....OOO^ 
+    ...... ^...=oOO.*.\O   ... .......... .\   ` ,=^*.,OOOO@^.=`^..=OO\ 
+    ...... ^...*`OO.*.=O ........          ......,`*^.=OOOo@^.=^^..=OOO.
+    ...... \....*oO^..*O^ ....... @OO[[[`  ......../.,@OOOo@^..OO...OOO`
+    ...... =.....*.=`..,O`       .O.....=   ... ^.=..OOOOO=O@..=O^..OOO^
+    ...... .^...**.O@...\O^ .     \.....`   .^ /.,^.=O@OO`=O@^..OO`.=OO\
+    ...... .^...,.=O=@...OO@\      ,[O\=.    ./`.*.*OOOOO..OOO*..OO.,OOO
+    ....../O....../^=O@`..O@@@@@]`    .* .,/@@/..../OOOOO*.,OOO..,OO`=OO
+    @OO\ooO....,*/@^,@@@\..@^[\@@@@@@O]*]//[`@^*^*=OOOOOO^..=OO\...\^.\@
+    OOooo^..`./oOO@/ =^\/^.^\\....=]......,/@@^O^*O.... .,][],OO\....\`.
+    @Oooo\/]OOOOOO/  .  \.=^....,..........[.,OO^=^.    /    ,`\OO`.....
+    """,
+    type="application",
+    homepage="https://github.com/Agnes4m/nonebot_plugin_AL",
+    supported_adapters={"~onebot.v11"},
     extra={
         "version": __version__,
-        "author": "Agnes-Digital <Z735803792@163.com>",
+        "author": "Agnes4m <Z735803792@163.com>",
     },
-    )
+)
 
 login_in = on_command('blogin',aliases={'b站登录'},block=False)
 login_del = on_command('blogin_del',aliases={'删除登录信息'},block=False)
@@ -44,7 +84,7 @@ del_only = on_command('bdel',aliases={'取消自动刷牌子','取消自动粉�
 del_all = on_command('bdel_all',aliases={'删除全部定时任务'},block=False,permission=SUPERUSER)
 
 @login_in.handle()
-async def _(matcher:Matcher,event:MessageEvent):
+async def _(matcher:Matcher,event:MessageEvent,bot:Bot):
     try:
         login_url, auth_code = await get_tv_qrcode_url_and_auth_code()
     except aiohttp.client_exceptions.ClientTimeoutError:
@@ -52,8 +92,13 @@ async def _(matcher:Matcher,event:MessageEvent):
     data_path = Path().joinpath(f'data/bilifan/{event.user_id}')
     data_path.mkdir(parents=True, exist_ok=True)
     data = await draw_QR(login_url)
+    forward_msg = ["本功能会调用并保存b站登录信息的cookie,请确保你在信任本机器人主人的情况下登录,如果出现财产损失,本作者对此不负责任"]
+    forward_msg.append(MessageSegment.image(data))
     try:
-        await matcher.send(MessageSegment.image(data))
+        if isinstance(event,GroupMessageEvent):
+            await bot.call_api('send_group_forward_msg',group_id=event.group_id, messages=forward_msg)
+        else:
+            await matcher.send(forward_msg[0]+forward_msg[1])
     except:
         logger.warning('二维码可能被风控，发送链接')
         await matcher.send("或将此链接复制到手机B站打开:"+login_url)

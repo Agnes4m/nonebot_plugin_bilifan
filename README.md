@@ -43,7 +43,7 @@ _✨自动b站粉丝牌✨_
 
 ## 🙈 其他
 
-- 本项目仅供学习使用，请勿用于商业用途
+- 本项目仅供学习使用，请勿用于商业用途，喜欢该项目可以Star或者提供PR
 - [爱发电](https://afdian.net/a/agnes_digital)
 - [GPL-3.0 License](https://github.com/Agnes4m/nonebot_plugin_bilifan/blob/main/LICENSE) ©[@Agnes4m](https://github.com/Agnes4m)
 
