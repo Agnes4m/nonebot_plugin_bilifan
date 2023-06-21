@@ -27,12 +27,7 @@ logger.opt(colors=True).info(
     else "未检测到软依赖<y>nonebot_plugin_apscheduler</y>，<r>禁用定时任务功能</r>"
 )
 
-driver = get_driver()
-__version__ = "0.2.0"
-__plugin_meta__ = PluginMetadata(
-    name="bilifan",
-    description='b站粉丝牌~',
-    usage="""
+logo ="""
     ......                  ` .]]@@@@@@@@@@@@@@@@@@@@@@@@@@@@@OO^       
     ......                ,/@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@OO^       
     ......            /O@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@OO^       
@@ -66,9 +61,16 @@ __plugin_meta__ = PluginMetadata(
     @OO\ooO....,*/@^,@@@\..@^[\@@@@@@O]*]//[`@^*^*=OOOOOO^..=OO\...\^.\@
     OOooo^..`./oOO@/ =^\/^.^\\....=]......,/@@^O^*O.... .,][],OO\....\`.
     @Oooo\/]OOOOOO/  .  \.=^....,..........[.,OO^=^.    /    ,`\OO`.....
-    """,
+    """
+
+driver = get_driver()
+__version__ = "0.2.0"
+__plugin_meta__ = PluginMetadata(
+    name="bilifan",
+    description='b站粉丝牌~',
+    usage=logo,
     type="application",
-    homepage="https://github.com/Agnes4m/nonebot_plugin_AL",
+    homepage="https://github.com/Agnes4m/nonebot_plugin_bilifan",
     supported_adapters={"~onebot.v11"},
     extra={
         "version": __version__,
