@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_bilifan"
-version = "0.2.2"
+version = "0.2.3"
 description = "刷站粉丝牌子的机器人插件"
 authors = ["Agnes_Digital <Z735803792@163.com>"]
 license = "GPLv3"
