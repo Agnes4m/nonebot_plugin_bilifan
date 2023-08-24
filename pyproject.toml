@@ -50,8 +50,10 @@ extra-standard-library = ["typing_extensions"]
 ignore = [
     "B008",
     "B905",
-    "N803:,
+    "N803",
     "E501",
+    "N806",
+    "N802",
     "FBT002",
     "PGH003",
     "RUF001",
@@ -60,6 +62,7 @@ ignore = [
     "RUF006",
     "RUF100",
     "SIM117",
+    "TRY201",
     "TRY002",
     "TRY003",
 ]

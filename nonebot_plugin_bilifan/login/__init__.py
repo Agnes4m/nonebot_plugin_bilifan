@@ -1,17 +1,16 @@
+import asyncio
 import hashlib
-import urllib.parse as urlparse
-import time
-import os
 import shutil
-import yaml
-import aiohttp , asyncio
 import time
-import hashlib
 import urllib.parse as urlparse
 from io import BytesIO
 from pathlib import Path
+
+import aiohttp
+
 # import qrcode_terminal
 import qrcode
+import yaml
 from nonebot.log import logger
 
 # Cookies = cookiejar.CookieJar()
@@ -20,44 +19,42 @@ from nonebot.log import logger
 
 csrf = ""
 access_key = ""
-base_path = Path().joinpath('data/bilifan')
-
-
+base_path = Path().joinpath("data/bilifan")
 
 
 async def is_login(session, cookies):
-    api = 'https://api.bilibili.com/x/web-interface/nav'
+    api = "https://api.bilibili.com/x/web-interface/nav"
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
     }
     async with session.get(api, headers=headers, cookies=cookies) as resp:
         data = await resp.json()
-        return data['code'] == 0, data['data']['uname']
-
+        return data["code"] == 0, data["data"]["uname"]
 
 
 async def get_tv_qrcode_url_and_auth_code():
-    api = 'http://passport.bilibili.com/x/passport-tv-login/qrcode/auth_code'
+    api = "http://passport.bilibili.com/x/passport-tv-login/qrcode/auth_code"
     data = {
         "local_id": "0",
         "ts": str(int(time.time())),
     }
     await signature(data)
     async with aiohttp.ClientSession() as session:
-        async with session.post(api, data=await map_to_string(data), headers={"Content-Type": "application/x-www-form-urlencoded"}) as resp:
+        async with session.post(
+            api,
+            data=await map_to_string(data),
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        ) as resp:
             resp_data = await resp.json()
-            code = resp_data['code']
+            code = resp_data["code"]
             if code == 0:
-                qrcode_url = resp_data['data']['url']
-                auth_code = resp_data['data']['auth_code']
+                qrcode_url = resp_data["data"]["url"]
+                auth_code = resp_data["data"]["auth_code"]
                 return qrcode_url, auth_code
-            else:
-                raise Exception('get_tv_qrcode_url_and_auth_code error')
+            raise Exception("get_tv_qrcode_url_and_auth_code error")
 
 
-
-
-async def verify_login(auth_code,data_path):
+async def verify_login(auth_code: str, data_path: Path):
     api = "http://passport.bilibili.com/x/passport-tv-login/qrcode/poll"
     data = {
         "auth_code": auth_code,
@@ -78,28 +75,31 @@ async def verify_login(auth_code,data_path):
                 code = response_dict["code"]
                 try:
                     access_key = response_dict["data"]["access_token"]
-                except:
+                except Exception:
                     await asyncio.sleep(3)
-            
+
             if code == 0:
                 logger.success("登录成功")
-                with open(data_path/"login_info.txt", "w") as f:
+                with (data_path / "login_info.txt").open("w") as f:
                     f.write(access_key)
-                if not os.path.exists(data_path/'users.yaml'):
-                    logger.info('初始化配置文件')
-                    shutil.copy2(Path().joinpath('data/bilifan/users.yaml'), data_path/'users.yaml')
-                with open(data_path/'users.yaml', 'r', encoding='utf-8') as f:
+                if not (data_path / "users.yaml").exists():
+                    logger.info("初始化配置文件")
+                    shutil.copy2(
+                        Path().joinpath("data/bilifan/users.yaml"),
+                        data_path / "users.yaml",
+                    )
+                with (data_path / "users.yaml").open("r", encoding="utf-8") as f:
                     config = yaml.safe_load(f)
-                config['USERS'][0]['access_key'] = access_key
-                with open(data_path/'users.yaml', 'w', encoding='utf-8') as f:
+                config["USERS"][0]["access_key"] = access_key
+                with (data_path / "users.yaml").open("w", encoding="utf-8") as f:
                     yaml.dump(config, f, allow_unicode=True, default_flow_style=False)
                 return "access_key已保存"
-            else:
-                time.sleep(3)
+            asyncio.sleep(3)
 
 
 appkey = "4409e2ce8ffd12b8"
 appsec = "59b43e04ad6965f34319062b478f83dd"
+
 
 async def signature(params: dict):
     keys = list(params.keys())
@@ -108,28 +108,28 @@ async def signature(params: dict):
     keys.sort()
     query = "&".join([k + "=" + urlparse.quote(params[k]) for k in keys])
     query += appsec
-    hash = hashlib.md5(query.encode("utf-8"))
-    params["sign"] = hash.hexdigest()
+    hash_ = hashlib.md5(query.encode("utf-8"))
+    params["sign"] = hash_.hexdigest()
+
 
 async def map_to_string(params: dict) -> str:
-    query = "&".join([k + "=" + v for k, v in params.items()])
-    return query
+    return "&".join([k + "=" + v for k, v in params.items()])
 
-async def draw_QR(login_url):
+
+async def draw_QR(login_url: str):  # noqa: N802
     "绘制二维码"
     qr = qrcode.QRCode(version=1, box_size=10, border=4)
     qr.add_data(login_url)
     qr.make(fit=True)
     img = qr.make_image(fill_color="black", back_color="white")
     buffered = BytesIO()
-    img.save(buffered,format="PNG")
-    img_bytes = buffered.getvalue()
-    return img_bytes
+    img.save(buffered, format="PNG")
+    return buffered.getvalue()
     # img.save("qrcode.png")
 
 
 # async def loginBili():
-    
+
 #     login_url, auth_code = await get_tv_qrcode_url_and_auth_code()
 #     qrcode_terminal.draw(login_url)
 #     print("或将此链接复制到手机B站打开:", login_url)
@@ -140,7 +140,7 @@ async def draw_QR(login_url):
 #         else:
 #             time.sleep(3)
 #             print("等待扫码登录中...")
-            
+
 # async def main():
 #     loginBili()
 #     input()
