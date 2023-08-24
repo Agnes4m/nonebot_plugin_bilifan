@@ -10,11 +10,11 @@ from nonebot.permission import SUPERUSER
 from nonebot import on_command
 from nonebot import require,get_driver
 from nonebot.matcher import Matcher
-from nonebot.adapters.onebot.v11 import (
-    MessageSegment,MessageEvent,Message,
-    GroupMessageEvent,PrivateMessageEvent,
-    Bot)
+
+from nonebot.adapters import Event,Message,Bot
 from nonebot.plugin import PluginMetadata
+from nonebot_plugin_saa import MessageFactory,Image
+from nonebot.adapters.onebot.v11 import MessageSegment
 try:
     require("nonebot_plugin_apscheduler").scheduler
     from nonebot_plugin_apscheduler import scheduler
@@ -64,7 +64,7 @@ logo ="""
     """
 
 driver = get_driver()
-__version__ = "0.2.0"
+__version__ = "0.2.2"
 __plugin_meta__ = PluginMetadata(
     name="bilifan",
     description='b站粉丝牌~',
@@ -86,24 +86,31 @@ del_only = on_command('bdel',aliases={'取消自动刷牌子','取消自动粉�
 del_all = on_command('bdel_all',aliases={'删除全部定时任务'},block=False,permission=SUPERUSER)
 
 @login_in.handle()
-async def _(matcher:Matcher,event:MessageEvent,bot:Bot):
+async def _(matcher:Matcher,event:Event,bot:Bot):
     try:
         login_url, auth_code = await get_tv_qrcode_url_and_auth_code()
     except aiohttp.client_exceptions.ClientTimeoutError:
         await matcher.finish("已超时，请稍后重试！")
-    data_path = Path().joinpath(f'data/bilifan/{event.user_id}')
+        return
+    data_path = Path().joinpath(f'data/bilifan/{event.get_user_id()}')
     data_path.mkdir(parents=True, exist_ok=True)
     data = await draw_QR(login_url)
     forward_msg = ["本功能会调用并保存b站登录信息的cookie,请确保你在信任本机器人主人的情况下登录,如果出现财产损失,本作者对此不负责任"]
     forward_msg.append(MessageSegment.image(data))
-    try:
-        if isinstance(event,GroupMessageEvent):
-            await bot.call_api('send_group_forward_msg',group_id=event.group_id, messages=forward_msg)
-        else:
-            await matcher.send(forward_msg[0]+forward_msg[1])
-    except:
-        logger.warning('二维码可能被风控，发送链接')
-        await matcher.send("或将此链接复制到手机B站打开:"+login_url)
+
+    if bot.adapter.get_name() == "OneBot V11":
+        forward_msgs = render_forward_msg(forward_msg,bot=Bot)
+        try:
+            if not event.get_event_name().startswith("message.private"):
+                await bot.call_api('send_group_forward_msg',group_id=event.group_id, messages=forward_msgs)
+            else:
+                await matcher.send(forward_msg[0]+forward_msg[1])
+        except:
+            logger.warning('二维码可能被风控，发送链接')
+            await matcher.send("或将此链接复制到手机B站打开:"+login_url)
+    else:
+        await MessageFactory([Image(data)]).send()
+        await matcher.send(forward_msg[0])
     while True:
         a = await verify_login(auth_code,data_path)
         if a:
@@ -114,7 +121,7 @@ async def _(matcher:Matcher,event:MessageEvent,bot:Bot):
 
 
 @login_del.handle()
-async def _(matcher:Matcher,event:MessageEvent):
+async def _(matcher:Matcher,event:Event):
     config = load_config()
     msg_path = Path().joinpath(f'data/bilifan/{event.user_id}/login_info.txt')   
     if msg_path.is_file(): 
@@ -131,7 +138,7 @@ async def _(matcher:Matcher,event:MessageEvent):
 
 
 @fan_once.handle()
-async def _(matcher:Matcher,event:MessageEvent):
+async def _(matcher:Matcher,event:Event):
     data_path = Path().joinpath(f'data/bilifan/{event.user_id}')
     data_path.mkdir(parents=True, exist_ok=True)
     msg_path = Path().joinpath(f'data/bilifan/{event.user_id}/login_info.txt')
@@ -152,12 +159,9 @@ async def _(matcher:Matcher,event:MessageEvent):
 
 
 @fan_once.handle()
-async def _(matcher:Matcher,event:MessageEvent):
+async def _(matcher:Matcher,event:Event):
     config = load_config()
-    if isinstance(event, GroupMessageEvent):
-        group_id = event.group_id
-    else:
-        group_id = event.user_id
+    group_id = event.get_session_id()
         
     msg_path = Path().joinpath(f'data/bilifan/{event.user_id}/login_info.txt')   
     if msg_path.is_file(): 
@@ -178,7 +182,7 @@ async def _(matcher:Matcher,event:MessageEvent):
 
 
 @del_only.handle()
-async def _(matcher:Matcher,event:MessageEvent):
+async def _(matcher:Matcher,event:Event):
     config = load_config()
     msg_path = Path().joinpath(f'data/bilifan/{event.user_id}/login_info.txt')   
     if msg_path.is_file(): 

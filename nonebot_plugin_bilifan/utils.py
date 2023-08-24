@@ -75,7 +75,8 @@ def render_forward_msg(msg_list: list, uid=2711142767, name='宁宁',bot:Bot = N
         name = list(bot.config.nickname)[0]
     except Exception as e:
         logger.warning(f'获取bot信息错误\n{e}')
-    forward_msg = []
+    forward_msg:list = []
+    print(msg_list)
     for msg in msg_list:
         forward_msg.append({
             "type": "node",
