@@ -65,7 +65,7 @@ logo = """
     """
 
 driver = get_driver()
-__version__ = "0.2.2"
+__version__ = "0.2.3"
 __plugin_meta__ = PluginMetadata(
     name="bilifan",
     description="b站粉丝牌~",
@@ -149,7 +149,7 @@ async def _(matcher: Matcher, event: Event):
     try:
         if msg_path.is_file():
             logger.info(msg_path)
-            users = await read_yaml(Path().joinpath("data/bilifan"))
+            users = read_yaml(Path().joinpath("data/bilifan"))
             watchinglive = users.get("WATCHINGLIVE", None)
             await matcher.send(f"开始执行，预计将在{watchinglive}分钟后完成~")
         else:
@@ -174,7 +174,7 @@ async def _(matcher: Matcher, event: Event):
         else:
             config[event.user_id] = group_id
             save_config(config)
-            users = await read_yaml(Path().joinpath("data/bilifan"))
+            users = read_yaml(Path().joinpath("data/bilifan"))
             cron = users.get("CRON", None)
             try:
                 fields = cron.split(" ")
@@ -207,15 +207,12 @@ async def _(matcher: Matcher):
     matcher.finish("已删除全部定时刷牌子任务")
 
 
-@driver.on_bot_connect
-async def _():
-    users = await read_yaml(Path().joinpath("data/bilifan"))
-    cron = users.get("CRON", None)
-    if not cron:
-        logger.error("定时格式不正确，不启用定时功能")
-    try:
-        fields = cron.split(" ")
-    except AttributeError:
-        logger.error("定时格式不正确，不启用定时功能")
-        return
+users = read_yaml(Path().joinpath("data/bilifan"))
+cron = users.get("CRON", None)
+if not cron:
+    logger.error("定时格式不正确，不启用定时功能")
+try:
+    fields = cron.split(" ")
     scheduler.add_job(auto_cup, "cron", hour=fields[0], minute=fields[1], id="auto_cup")
+except AttributeError:
+    logger.error("定时格式不正确，不启用定时功能")

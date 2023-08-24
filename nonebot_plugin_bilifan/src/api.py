@@ -185,7 +185,7 @@ class BiliApi:
             headers=self.headers.update(
                 {
                     "Content-Type": "application/x-www-form-urlencoded",
-                }
+                },
             ),
         )
         # await asyncio.sleep(self.u.config['LIKE_CD'] if not self.u.config['ASYNC'] else 2)
@@ -210,7 +210,7 @@ class BiliApi:
             headers=self.headers.update(
                 {
                     "Content-Type": "application/x-www-form-urlencoded",
-                }
+                },
             ),
         )
 
@@ -234,7 +234,7 @@ class BiliApi:
             headers=self.headers.update(
                 {
                     "Content-Type": "application/x-www-form-urlencoded",
-                }
+                },
             ),
         )
         # await asyncio.sleep(self.u.config['SHARE_CD'] if not self.u.config['ASYNC'] else 5)
@@ -282,7 +282,7 @@ class BiliApi:
                 headers=self.headers.update(
                     {
                         "Content-Type": "application/x-www-form-urlencoded",
-                    }
+                    },
                 ),
             )
         except BiliApiError as E:
@@ -291,12 +291,12 @@ class BiliApi:
                 params.update(
                     {
                         "ts": int(time.time()),
-                    }
+                    },
                 )
                 data.update(
                     {
                         "msg": "111",
-                    }
+                    },
                 )
                 resp = await self.__post(
                     url,
@@ -305,7 +305,7 @@ class BiliApi:
                     headers=self.headers.update(
                         {
                             "Content-Type": "application/x-www-form-urlencoded",
-                        }
+                        },
                     ),
                 )
                 return json.loads(resp["mode_info"]["extra"])["content"]
@@ -324,7 +324,9 @@ class BiliApi:
             "ts": int(time.time()),
         }
         return await self.__get(
-            url, params=SingableDict(params).signed, headers=self.headers
+            url,
+            params=SingableDict(params).signed,
+            headers=self.headers,
         )
 
     async def doSign(self):
@@ -339,7 +341,9 @@ class BiliApi:
             "ts": int(time.time()),
         }
         return await self.__get(
-            url, params=SingableDict(params).signed, headers=self.headers
+            url,
+            params=SingableDict(params).signed,
+            headers=self.headers,
         )
 
     async def getUserInfo(self):
@@ -354,7 +358,9 @@ class BiliApi:
             "ts": int(time.time()),
         }
         return await self.__get(
-            url, params=SingableDict(params).signed, headers=self.headers
+            url,
+            params=SingableDict(params).signed,
+            headers=self.headers,
         )
 
     async def getMedalsInfoByUid(self, uid: int):
@@ -370,7 +376,9 @@ class BiliApi:
             "target_id": uid,
         }
         return await self.__get(
-            url, params=SingableDict(params).signed, headers=self.headers
+            url,
+            params=SingableDict(params).signed,
+            headers=self.headers,
         )
 
     # async def entryRoom(self, room_id: int, up_id: int):
@@ -440,7 +448,7 @@ class BiliApi:
                 "actionKey": "appkey",
                 "appkey": Crypto.APPKEY,
                 "ts": int(time.time()),
-            }
+            },
         )
         return await self.__post(
             url,
@@ -448,7 +456,7 @@ class BiliApi:
             headers=self.headers.update(
                 {
                     "Content-Type": "application/x-www-form-urlencoded",
-                }
+                },
             ),
         )
 
@@ -473,7 +481,7 @@ class BiliApi:
             headers=self.headers.update(
                 {
                     "Content-Type": "application/x-www-form-urlencoded",
-                }
+                },
             ),
         )
 
@@ -487,7 +495,9 @@ class BiliApi:
         }
         list_msg = (
             await self.__get(
-                url, params=SingableDict(params).signed, headers=self.headers
+                url,
+                params=SingableDict(params).signed,
+                headers=self.headers,
             )
         )["list"]
         for group in list_msg:
@@ -504,7 +514,9 @@ class BiliApi:
             "owner_id": owner_id,
         }
         return await self.__get(
-            url, params=SingableDict(params).signed, headers=self.headers
+            url,
+            params=SingableDict(params).signed,
+            headers=self.headers,
         )
 
     async def getOneBattery(self):
@@ -516,5 +528,7 @@ class BiliApi:
             "ts": int(time.time()),
         }
         return await self.__post(
-            url, data=SingableDict(data).signed, headers=self.headers
+            url,
+            data=SingableDict(data).signed,
+            headers=self.headers,
         )

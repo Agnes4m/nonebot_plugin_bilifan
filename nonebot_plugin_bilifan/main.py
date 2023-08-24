@@ -27,7 +27,7 @@ logger.info(base_path)
 global users
 
 
-async def read_yaml(msg_path: Path):
+def read_yaml(msg_path: Path):
     global config, users
     try:
         if os.environ.get("USERS"):
@@ -60,7 +60,7 @@ async def read_yaml(msg_path: Path):
 
 @log.catch
 async def main(msg_path):
-    await read_yaml(msg_path)
+    read_yaml(msg_path)
     init_tasks = []
     start_tasks = []
     catch_msg = []
