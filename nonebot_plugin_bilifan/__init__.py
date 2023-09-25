@@ -65,7 +65,7 @@ logo = """
     """
 
 driver = get_driver()
-__version__ = "0.2.3"
+__version__ = "0.2.4"
 __plugin_meta__ = PluginMetadata(
     name="bilifan",
     description="b站粉丝牌~",
@@ -216,3 +216,8 @@ try:
     scheduler.add_job(auto_cup, "cron", hour=fields[0], minute=fields[1], id="auto_cup")
 except AttributeError:
     logger.error("定时格式不正确，不启用定时功能")
+
+
+@driver.on_bot_disconnect
+async def _():
+    scheduler.remove_job("auto_cup")
