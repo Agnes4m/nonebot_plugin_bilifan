@@ -174,13 +174,15 @@ async def _(matcher: Matcher, event: Event):
     msg_path = Path().joinpath(f"data/bilifan/{event.user_id}/login_info.txt")
     if msg_path.is_file():
         if event.user_id in config:
-            users = read_yaml(Path().joinpath('data/bilifan'))
-            cron = users.get('CRON', None)
+            users = read_yaml(Path().joinpath("data/bilifan"))
+            cron = users.get("CRON", None)
             try:
                 fields = cron.split(" ")
-                await matcher.finish(f"{event.user_id}的定时任务已存在，将在每天{fields[0]}时{fields[1]}分开始执行~")
+                await matcher.finish(
+                    f"{event.user_id}的定时任务已存在，将在每天{fields[0]}时{fields[1]}分开始执行~"
+                )
             except AttributeError:
-                await matcher.finish('定时格式不正确，请尝试删除定时任务后重新设置')
+                await matcher.finish("定时格式不正确，请尝试删除定时任务后重新设置")
         else:
             config[event.user_id] = group_id
             save_config(config)
