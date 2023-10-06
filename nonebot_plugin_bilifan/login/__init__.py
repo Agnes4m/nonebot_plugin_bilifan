@@ -85,7 +85,7 @@ async def verify_login(auth_code: str, data_path: Path):
                     f.write(access_key)
                 else:
                     with (data_path / "login_info.txt").open("a") as f:
-                        f.write('\n' + access_key)
+                        f.write("\n" + access_key)
                 if not (data_path / "users.yaml").exists():
                     logger.info("初始化配置文件")
                     shutil.copy2(
