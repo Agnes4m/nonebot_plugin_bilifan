@@ -45,7 +45,7 @@ async def auto_cup():
 
     for user_id, group_id in config.items():  # noqa: B007
         msg_path = Path().joinpath(f"data/bilifan/{user_id}/login_info.txt")
-        if msg_path.is_file:
+        if msg_path.is_file():
             pass
         else:
             logger.warning("usr_id尚未登录，已忽略")
@@ -76,7 +76,7 @@ async def auto_cup():
             count[group_id] = count_value + 1
 
 
-def render_forward_msg(msg_list: list, uid=2711142767, name="宁宁", bot: Bot = None):
+def render_forward_msg(msg_list: list, uid, name, bot: Bot = None):
     try:
         uid = bot.self_id
         name = next(iter(bot.config.nickname))
