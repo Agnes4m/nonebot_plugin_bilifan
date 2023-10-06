@@ -80,8 +80,12 @@ async def verify_login(auth_code: str, data_path: Path):
 
             if code == 0:
                 logger.success("登录成功")
+                if not os.path.exists(data_path / "login_info.txt"):
                 with (data_path / "login_info.txt").open("w") as f:
                     f.write(access_key)
+                else:
+                    with (data_path / "login_info.txt").open("a") as f:
+                        f.write('\n' + access_key)
                 if not (data_path / "users.yaml").exists():
                     logger.info("初始化配置文件")
                     shutil.copy2(
@@ -90,6 +94,13 @@ async def verify_login(auth_code: str, data_path: Path):
                     )
                 with (data_path / "users.yaml").open("r", encoding="utf-8") as f:
                     config = yaml.safe_load(f)
+                if config["USERS"][0]["access_key"] and config["USERS"][1]["access_key"]:
+                    temp = config["USERS"][1]["access_key"]
+                    config["USERS"][1]["access_key"] = access_key
+                    config["USERS"][0]["access_key"] = temp
+                elif config["USERS"][0]["access_key"]:
+                    config["USERS"][1]["access_key"] = access_key
+                else:
                 config["USERS"][0]["access_key"] = access_key
                 with (data_path / "users.yaml").open("w", encoding="utf-8") as f:
                     yaml.dump(config, f, allow_unicode=True, default_flow_style=False)
