@@ -85,7 +85,10 @@ fan_once = on_command("bfan", aliases={"开始刷牌子", "开始粉丝牌"}, bl
 fan_auto = on_command("addfan", aliases={"自动刷牌子", "自动粉丝牌"}, priority=40, block=False)
 del_only = on_command("bdel", aliases={"取消自动刷牌子", "取消自动粉丝牌"}, block=False)
 del_all = on_command(
-    "bdel_all", aliases={"删除全部定时任务"}, block=False, permission=SUPERUSER,
+    "bdel_all",
+    aliases={"删除全部定时任务"},
+    block=False,
+    permission=SUPERUSER,
 )
 
 
