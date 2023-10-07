@@ -20,7 +20,7 @@ class Crypto:
     @staticmethod
     def md5(data: Union[str, bytes]) -> str:
         """generates md5 hex dump of `str` or `bytes`"""
-        if type(data) == str:
+        if isinstance(data, str):
             return md5(data.encode()).hexdigest()
         return md5(data).hexdigest()
 
@@ -29,7 +29,7 @@ class Crypto:
         """salted sign funtion for `dict`(converts to qs then parse) & `str`"""
         if isinstance(data, dict):
             _str = urlencode(data)
-        elif type(data) != str:
+        elif not isinstance(data, str):
             raise TypeError
         return Crypto.md5(_str + Crypto.APPSECRET)
 
