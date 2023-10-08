@@ -84,7 +84,12 @@ login_del = on_command("blogin_del", aliases={"删除登录信息"}, block=False
 fan_once = on_command("bfan", aliases={"开始刷牌子", "开始粉丝牌"}, block=False)
 fan_auto = on_command("addfan", aliases={"自动刷牌子", "自动粉丝牌"}, priority=40, block=False)
 del_only = on_command("bdel", aliases={"取消自动刷牌子", "取消自动粉丝牌"}, block=False)
-del_all = on_command("bdel_all", aliases={"删除全部定时任务"}, block=False, permission=SUPERUSER)
+del_all = on_command(
+    "bdel_all",
+    aliases={"删除全部定时任务"},
+    block=False,
+    permission=SUPERUSER,
+)
 
 
 @login_in.handle()
@@ -113,10 +118,14 @@ async def _(matcher: Matcher, event: Event, bot: Bot):
                 await matcher.send(forward_msg[0] + forward_msg[1])
         except Exception:
             logger.warning("二维码可能被风控，发送链接")
-            await matcher.send("或将此链接复制到手机B站打开:" + login_url)
+            await matcher.send("将此链接复制到手机B站打开:" + login_url)
     else:
-        await MessageFactory([Image(data)]).send()
-        await matcher.send(forward_msg[0])
+        try:
+            await MessageFactory([Image(data)]).send()
+            await matcher.send(forward_msg[0])
+        except Exception:
+            logger.warning("二维码可能被风控，发送链接")
+            await matcher.send("将此链接复制到手机B站打开:" + login_url)
     while True:
         a = await verify_login(auth_code, data_path)
         if a:
@@ -170,7 +179,15 @@ async def _(matcher: Matcher, event: Event):
     msg_path = Path().joinpath(f"data/bilifan/{event.user_id}/login_info.txt")
     if msg_path.is_file():
         if event.user_id in config:
-            await matcher.finish(f"{event.user_id}的定时任务已存在")
+            users = read_yaml(Path().joinpath("data/bilifan"))
+            cron = users.get("CRON", None)
+            try:
+                fields = cron.split(" ")
+                await matcher.finish(
+                    f"{event.user_id}的定时任务已存在，将在每天{fields[0]}时{fields[1]}分开始执行~",
+                )
+            except AttributeError:
+                await matcher.finish("定时格式不正确，请尝试删除定时任务后重新设置")
         else:
             config[event.user_id] = group_id
             save_config(config)
@@ -213,6 +230,7 @@ if not cron:
     logger.error("定时格式不正确，不启用定时功能")
 try:
     fields = cron.split(" ")
+    logger.info(f"定时任务已配置，将在每天{fields[0]}时{fields[1]}分自动执行~")
     scheduler.add_job(auto_cup, "cron", hour=fields[0], minute=fields[1], id="auto_cup")
 except AttributeError:
     logger.error("定时格式不正确，不启用定时功能")
