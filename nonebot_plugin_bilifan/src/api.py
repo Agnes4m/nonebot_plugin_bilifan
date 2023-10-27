@@ -1,52 +1,50 @@
 import asyncio
-from hashlib import md5
 import hashlib
+import json
 import random
 import time
-import json
+from hashlib import md5
 from typing import Union
-from nonebot.log import logger
 from urllib.parse import urlencode, urlparse
 
-
 from aiohttp import ClientSession
+from nonebot.log import logger
 
 # sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 class Crypto:
-
-    APPKEY = '4409e2ce8ffd12b8'
-    APPSECRET = '59b43e04ad6965f34319062b478f83dd'
+    APPKEY = "4409e2ce8ffd12b8"
+    APPSECRET = "59b43e04ad6965f34319062b478f83dd"
 
     @staticmethod
     def md5(data: Union[str, bytes]) -> str:
-        '''generates md5 hex dump of `str` or `bytes`'''
-        if type(data) == str:
+        """generates md5 hex dump of `str` or `bytes`"""
+        if isinstance(data, str):
             return md5(data.encode()).hexdigest()
         return md5(data).hexdigest()
 
     @staticmethod
     def sign(data: Union[str, dict]) -> str:
-        '''salted sign funtion for `dict`(converts to qs then parse) & `str`'''
+        """salted sign funtion for `dict`(converts to qs then parse) & `str`"""
         if isinstance(data, dict):
             _str = urlencode(data)
-        elif type(data) != str:
+        elif not isinstance(data, str):
             raise TypeError
-        return Crypto.md5(_str + Crypto.APPSECRET)
+        return Crypto.md5(_str + Crypto.APPSECRET)  # type: ignore
 
 
 class SingableDict(dict):
     @property
     def sorted(self):
-        '''returns a alphabetically sorted version of `self`'''
+        """returns a alphabetically sorted version of `self`"""
         return dict(sorted(self.items()))
 
     @property
     def signed(self):
-        '''returns our sorted self with calculated `sign` as a new key-value pair at the end'''
+        """returns our sorted self with calculated `sign` as a new key-value pair at the end"""
         _sorted = self.sorted
-        return {**_sorted, 'sign': Crypto.sign(_sorted)}
+        return {**_sorted, "sign": Crypto.sign(_sorted)}
 
 
 def retry(tries=3, interval=1):
@@ -88,14 +86,18 @@ def retry(tries=3, interval=1):
 
 
 def client_sign(data: dict):
-    _str = json.dumps(data, separators=(',', ':'))
+    _str = json.dumps(data, separators=(",", ":"))
     for n in ["sha512", "sha3_512", "sha384", "sha3_384", "blake2b"]:
-        _str = hashlib.new(n, _str.encode('utf-8')).hexdigest()
+        _str = hashlib.new(n, _str.encode("utf-8")).hexdigest()
     return _str
 
 
 def randomString(length: int = 16) -> str:
-    return ''.join(random.sample('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', length))
+    return "".join(
+        random.sample(
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", length
+        )
+    )
 
 
 class BiliApiError(Exception):
@@ -118,9 +120,9 @@ class BiliApi:
         self.session = s
 
     def __check_response(self, resp: dict) -> dict:
-        if resp['code'] != 0 or ('mode_info' in resp['data'] and resp['message'] != ''):
-            raise BiliApiError(resp['code'], resp['message'])
-        return resp['data']
+        if resp["code"] != 0 or ("mode_info" in resp["data"] and resp["message"] != ""):
+            raise BiliApiError(resp["code"], resp["message"])
+        return resp["data"]
 
     @retry()
     async def __get(self, *args, **kwargs):
@@ -147,19 +149,21 @@ class BiliApi:
         }
         first_flag = True
         while True:
-            data = await self.__get(url, params=SingableDict(params).signed, headers=self.headers)
-            if first_flag and data['special_list']:
-                for item in data['special_list']:
+            data = await self.__get(
+                url, params=SingableDict(params).signed, headers=self.headers
+            )
+            if first_flag and data["special_list"]:
+                for item in data["special_list"]:
                     # 强制把正在佩戴的牌子加入任务列表
-                    item['medal']['today_feed'] = 0
-                    yield item
-                self.u.wearedMedal = data['special_list'][0]
+                    item["medal"]["today_feed"] = 0
+                    yield item  # type: ignore
+                self.u.wearedMedal = data["special_list"][0]
                 first_flag = False
-            for item in data['list']:
-                yield item
-            if not data['list']:
+            for item in data["list"]:
+                yield item  # type: ignore
+            if not data["list"]:
                 break
-            params['page'] += 1
+            params["page"] += 1
 
     async def likeInteract(self, room_id: int):
         """
@@ -185,7 +189,7 @@ class BiliApi:
         )
         # await asyncio.sleep(self.u.config['LIKE_CD'] if not self.u.config['ASYNC'] else 2)
 
-    async def likeInteractV3(self, room_id: int, up_id: int):
+    async def likeInteractV3(self, room_id: int, up_id: int, self_uid: int):
         """
         点赞直播间V3
         """
@@ -197,6 +201,7 @@ class BiliApi:
             "ts": int(time.time()),
             "room_id": room_id,
             "anchor_id": up_id,
+            "uid": self_uid,
         }
         # for _ in range(3):
         await self.__post(
@@ -282,7 +287,7 @@ class BiliApi:
             )
         except BiliApiError as e:
             if e.code == 0:
-                await asyncio.sleep(self.u.config['DANMAKU_CD'])
+                await asyncio.sleep(self.u.config["DANMAKU_CD"])
                 params.update(
                     {
                         "ts": int(time.time()),
@@ -303,9 +308,9 @@ class BiliApi:
                         }
                     ),
                 )
-                return json.loads(resp['mode_info']['extra'])['content']
+                return json.loads(resp["mode_info"]["extra"])["content"]
             raise e
-        return json.loads(resp['mode_info']['extra'])['content']
+        return json.loads(resp["mode_info"]["extra"])["content"]
 
     async def loginVerift(self):
         """
@@ -318,7 +323,9 @@ class BiliApi:
             "appkey": Crypto.APPKEY,
             "ts": int(time.time()),
         }
-        return await self.__get(url, params=SingableDict(params).signed, headers=self.headers)
+        return await self.__get(
+            url, params=SingableDict(params).signed, headers=self.headers
+        )
 
     async def doSign(self):
         """
@@ -331,7 +338,9 @@ class BiliApi:
             "appkey": Crypto.APPKEY,
             "ts": int(time.time()),
         }
-        return await self.__get(url, params=SingableDict(params).signed, headers=self.headers)
+        return await self.__get(
+            url, params=SingableDict(params).signed, headers=self.headers
+        )
 
     async def getUserInfo(self):
         """
@@ -344,7 +353,9 @@ class BiliApi:
             "appkey": Crypto.APPKEY,
             "ts": int(time.time()),
         }
-        return await self.__get(url, params=SingableDict(params).signed, headers=self.headers)
+        return await self.__get(
+            url, params=SingableDict(params).signed, headers=self.headers
+        )
 
     async def getMedalsInfoByUid(self, uid: int):
         """
@@ -358,7 +369,9 @@ class BiliApi:
             "ts": int(time.time()),
             "target_id": uid,
         }
-        return await self.__get(url, params=SingableDict(params).signed, headers=self.headers)
+        return await self.__get(
+            url, params=SingableDict(params).signed, headers=self.headers
+        )
 
     # async def entryRoom(self, room_id: int, up_id: int):
     #     data = {
@@ -393,42 +406,42 @@ class BiliApi:
     async def heartbeat(self, room_id: int, up_id: int):
         url = "https://live-trace.bilibili.com/xlive/data-interface/v1/heartbeat/mobileHeartBeat"
         data = {
-            'platform': 'android',
-            'uuid': self.u.uuids[0],
-            'buvid': randomString(37).upper(),
-            'seq_id': '1',
-            'room_id': f'{room_id}',
-            'parent_id': '6',
-            'area_id': '283',
-            'timestamp': f'{int(time.time())-60}',
-            'secret_key': 'axoaadsffcazxksectbbb',
-            'watch_time': '60',
-            'up_id': f'{up_id}',
-            'up_level': '40',
-            'jump_from': '30000',
-            'gu_id': randomString(43).lower(),
-            'play_type': '0',
-            'play_url': '',
-            's_time': '0',
-            'data_behavior_id': '',
-            'data_source_id': '',
-            'up_session': f'l:one:live:record:{room_id}:{int(time.time())-88888}',
-            'visit_id': randomString(32).lower(),
-            'watch_status': '%7B%22pk_id%22%3A0%2C%22screen_status%22%3A1%7D',
-            'click_id': self.u.uuids[1],
-            'session_id': '',
-            'player_type': '0',
-            'client_ts': f'{int(time.time())}',
+            "platform": "android",
+            "uuid": self.u.uuids[0],
+            "buvid": randomString(37).upper(),
+            "seq_id": "1",
+            "room_id": f"{room_id}",
+            "parent_id": "6",
+            "area_id": "283",
+            "timestamp": f"{int(time.time())-60}",
+            "secret_key": "axoaadsffcazxksectbbb",
+            "watch_time": "60",
+            "up_id": f"{up_id}",
+            "up_level": "40",
+            "jump_from": "30000",
+            "gu_id": randomString(43).lower(),
+            "play_type": "0",
+            "play_url": "",
+            "s_time": "0",
+            "data_behavior_id": "",
+            "data_source_id": "",
+            "up_session": f"l:one:live:record:{room_id}:{int(time.time())-88888}",
+            "visit_id": randomString(32).lower(),
+            "watch_status": "%7B%22pk_id%22%3A0%2C%22screen_status%22%3A1%7D",
+            "click_id": self.u.uuids[1],
+            "session_id": "",
+            "player_type": "0",
+            "client_ts": f"{int(time.time())}",
         }
         data.update(
             {
-                'client_sign': client_sign(data),
+                "client_sign": client_sign(data),
                 "access_key": self.u.access_key,
                 "actionKey": "appkey",
                 "appkey": Crypto.APPKEY,
                 "ts": int(time.time()),
-            }
-        )
+            }  # type: ignore
+        )  # type: ignore
         return await self.__post(
             url,
             data=SingableDict(data).signed,
@@ -472,7 +485,11 @@ class BiliApi:
             "appkey": Crypto.APPKEY,
             "ts": int(time.time()),
         }
-        list = (await self.__get(url, params=SingableDict(params).signed, headers=self.headers))['list']
+        list = (
+            await self.__get(
+                url, params=SingableDict(params).signed, headers=self.headers
+            )
+        )["list"]
         for group in list:
             yield group
 
@@ -486,7 +503,9 @@ class BiliApi:
             "group_id": group_id,
             "owner_id": owner_id,
         }
-        return await self.__get(url, params=SingableDict(params).signed, headers=self.headers)
+        return await self.__get(
+            url, params=SingableDict(params).signed, headers=self.headers
+        )
 
     async def getOneBattery(self):
         url = "https://api.live.bilibili.com/xlive/app-ucenter/v1/userTask/UserTaskReceiveRewards"
@@ -496,4 +515,6 @@ class BiliApi:
             "appkey": Crypto.APPKEY,
             "ts": int(time.time()),
         }
-        return await self.__post(url, data=SingableDict(data).signed, headers=self.headers)
+        return await self.__post(
+            url, data=SingableDict(data).signed, headers=self.headers
+        )

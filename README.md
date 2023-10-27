@@ -22,12 +22,13 @@ _✨自动b站粉丝牌✨_
         <img src="https://img.shields.io/pypi/v/nonebot_plugin_bilifan.svg" alt="pypi">
 </a>
     <img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="python">
-    <img src="https://img.shields.io/badge/nonebot-2.0.0rc4-red.svg" alt="NoneBot">
+    <img src="https://img.shields.io/badge/nonebot-2.0.0-red.svg" alt="NoneBot">
 </div>
 
-## 配置
+## 配置说明
 
 启动一次插件，在bot路径下，"data/bilifan"文件夹内，按需求修改"users.yaml"文件
+运行跨平台使用，支持saa下所有适配器
 
 ## 指令
 
