@@ -3,7 +3,7 @@ from pathlib import Path
 
 import aiohttp
 from nonebot import get_driver, on_command, require
-from nonebot.adapters import Bot, Event
+from nonebot.adapters import Event
 from nonebot.log import logger
 from nonebot.matcher import Matcher
 from nonebot.permission import SUPERUSER
@@ -15,7 +15,7 @@ from .src import BiliUser  # noqa: F401
 from .utils import auto_cup, load_config, save_config
 
 try:
-    require("nonebot_plugin_apscheduler").scheduler
+    require("nonebot_plugin_apscheduler")
     from nonebot_plugin_apscheduler import scheduler
 except BaseException:
     scheduler = None
@@ -49,13 +49,11 @@ login_del = on_command("blogin_del", aliases={"删除登录信息"}, block=False
 fan_once = on_command("bfan", aliases={"开始刷牌子", "开始粉丝牌"}, block=False)
 fan_once = on_command("addfan", aliases={"自动刷牌子", "自动粉丝牌"}, priority=40, block=False)
 del_only = on_command("bdel", aliases={"取消自动刷牌子", "取消自动粉丝牌"}, block=False)
-del_all = on_command(
-    "bdel_all", aliases={"删除全部定时任务"}, block=False, permission=SUPERUSER
-)
+del_all = on_command("bdel_all", aliases={"删除全部定时任务"}, block=False, permission=SUPERUSER)
 
 
 @login_in.handle()
-async def _(matcher: Matcher, event: Event, bot: Bot):
+async def _(matcher: Matcher, event: Event):
     try:
         login_url, auth_code = await get_tv_qrcode_url_and_auth_code()
     except aiohttp:
@@ -63,9 +61,7 @@ async def _(matcher: Matcher, event: Event, bot: Bot):
     data_path = Path().joinpath(f"data/bilifan/{event.get_user_id()}")
     data_path.mkdir(parents=True, exist_ok=True)
     data = await draw_QR(login_url)
-    forward_msg: list = [
-        "本功能会调用并保存b站登录信息的cookie,请确保你在信任本机器人主人的情况下登录,如果出现财产损失,本作者对此不负责任"
-    ]
+    forward_msg: list = ["本功能会调用并保存b站登录信息的cookie,请确保你在信任本机器人主人的情况下登录,如果出现财产损失,本作者对此不负责任"]
     forward_msg.append(Image(data))
     try:
         # if isinstance(event, GroupEvent):
@@ -82,19 +78,17 @@ async def _(matcher: Matcher, event: Event, bot: Bot):
         if a:
             await matcher.send(f"登录成功！\nqq:{event.get_user_id()}\n{a}")
             break
-        else:
-            await matcher.finish("登录失败！")
+        await matcher.finish("登录失败！")
 
 
 @login_del.handle()
 async def _(matcher: Matcher, event: Event):
     config = load_config()
     msg_path = Path().joinpath(f"data/bilifan/{event.get_user_id()}/login_info.txt")
-    if msg_path.is_file():
-        if event.get_user_id() in config:
-            del config[event.get_user_id()]
-            save_config(config)
-            logger.info(f"已删除{event.get_user_id()}的定时任务")
+    if msg_path.is_file() and event.get_user_id() in config:
+        del config[event.get_user_id()]
+        save_config(config)
+        logger.info(f"已删除{event.get_user_id()}的定时任务")
     try:
         data_path = Path().joinpath(f"data/bilifan/{event.get_user_id()}")
         shutil.rmtree(data_path)

@@ -36,7 +36,7 @@ class Crypto:
 
 class SingableDict(dict):
     @property
-    def sorted(self):
+    def sorted(self):  # noqa: A003
         """returns a alphabetically sorted version of `self`"""
         return dict(sorted(self.items()))
 
@@ -52,27 +52,25 @@ def retry(tries=3, interval=1):
         async def wrapper(*args, **kwargs):
             count = 0
             func.isRetryable = False
-            log = logger.bind(user=f"{args[0].u.name}")
             while True:
                 try:
                     result = await func(*args, **kwargs)
-                except Exception as e:
+                except Exception as E:
                     count += 1
-                    if type(e) == BiliApiError:
-                        if e.code == 1011040:
-                            raise e
-                        elif e.code == 10030:
+                    if type(E) == BiliApiError:
+                        if E.code == 1011040:
+                            raise E  # noqa: TRY201
+                        if E.code == 10030:
                             await asyncio.sleep(10)
-                        elif e.code == -504:
+                        elif E.code == -504:
                             pass
                         else:
-                            raise e
+                            raise E  # noqa: TRY201
                     if count > tries:
-                        log.error(f"API {urlparse(args[1]).path} 调用出现异常: {str(e)}")
-                        raise e
-                    else:
-                        # log.error(f"API {urlparse(args[1]).path} 调用出现异常: {str(e)}，重试中，第{count}次重试")
-                        await asyncio.sleep(interval)
+                        logger.error(f"API {urlparse(args[1]).path} 调用出现异常: {E!s}")
+                        raise E  # noqa: TRY201
+                    # log.error(f"API {urlparse(args[1]).path} 调用出现异常: {str(E)}，重试中，第{count}次重试")
+                    await asyncio.sleep(interval)
                     func.isRetryable = True
                 else:
                     if func.isRetryable:
@@ -110,7 +108,7 @@ class BiliApiError(Exception):
 
 
 class BiliApi:
-    headers = {
+    headers = {  # noqa: RUF012
         "User-Agent": "Mozilla/5.0 BiliDroid/6.73.1 (bbcallen@gmail.com) os/android model/Mi 10 Pro mobi_app/android build/6731100 channel/xiaomi innerVer/6731110 osVer/12 network/2",
     }
     from .user import BiliUser
@@ -134,7 +132,7 @@ class BiliApi:
         async with self.session.post(*args, **kwargs) as resp:
             return self.__check_response(await resp.json())
 
-    async def getFansMedalandRoomID(self) -> dict:
+    async def getFansMedalandRoomID(self) -> dict:  # type: ignore
         """
         获取用户粉丝勋章和直播间ID
         """
@@ -157,7 +155,7 @@ class BiliApi:
                     # 强制把正在佩戴的牌子加入任务列表
                     item["medal"]["today_feed"] = 0
                     yield item  # type: ignore
-                self.u.wearedMedal = data["special_list"][0]
+                self.u.wearedMedal = data["special_list"][0]  # type: ignore
                 first_flag = False
             for item in data["list"]:
                 yield item  # type: ignore
@@ -184,7 +182,7 @@ class BiliApi:
             headers=self.headers.update(
                 {
                     "Content-Type": "application/x-www-form-urlencoded",
-                }
+                },
             ),
         )
         # await asyncio.sleep(self.u.config['LIKE_CD'] if not self.u.config['ASYNC'] else 2)
@@ -210,7 +208,7 @@ class BiliApi:
             headers=self.headers.update(
                 {
                     "Content-Type": "application/x-www-form-urlencoded",
-                }
+                },
             ),
         )
 
@@ -234,7 +232,7 @@ class BiliApi:
             headers=self.headers.update(
                 {
                     "Content-Type": "application/x-www-form-urlencoded",
-                }
+                },
             ),
         )
         # await asyncio.sleep(self.u.config['SHARE_CD'] if not self.u.config['ASYNC'] else 5)
@@ -282,7 +280,7 @@ class BiliApi:
                 headers=self.headers.update(
                     {
                         "Content-Type": "application/x-www-form-urlencoded",
-                    }
+                    },
                 ),
             )
         except BiliApiError as e:
@@ -291,12 +289,12 @@ class BiliApi:
                 params.update(
                     {
                         "ts": int(time.time()),
-                    }
+                    },
                 )
                 data.update(
                     {
                         "msg": "111",
-                    }
+                    },
                 )
                 resp = await self.__post(
                     url,
@@ -305,7 +303,7 @@ class BiliApi:
                     headers=self.headers.update(
                         {
                             "Content-Type": "application/x-www-form-urlencoded",
-                        }
+                        },
                     ),
                 )
                 return json.loads(resp["mode_info"]["extra"])["content"]
@@ -324,7 +322,9 @@ class BiliApi:
             "ts": int(time.time()),
         }
         return await self.__get(
-            url, params=SingableDict(params).signed, headers=self.headers
+            url,
+            params=SingableDict(params).signed,
+            headers=self.headers,
         )
 
     async def doSign(self):
@@ -339,7 +339,9 @@ class BiliApi:
             "ts": int(time.time()),
         }
         return await self.__get(
-            url, params=SingableDict(params).signed, headers=self.headers
+            url,
+            params=SingableDict(params).signed,
+            headers=self.headers,
         )
 
     async def getUserInfo(self):
@@ -354,7 +356,9 @@ class BiliApi:
             "ts": int(time.time()),
         }
         return await self.__get(
-            url, params=SingableDict(params).signed, headers=self.headers
+            url,
+            params=SingableDict(params).signed,
+            headers=self.headers,
         )
 
     async def getMedalsInfoByUid(self, uid: int):
@@ -370,7 +374,9 @@ class BiliApi:
             "target_id": uid,
         }
         return await self.__get(
-            url, params=SingableDict(params).signed, headers=self.headers
+            url,
+            params=SingableDict(params).signed,
+            headers=self.headers,
         )
 
     # async def entryRoom(self, room_id: int, up_id: int):
@@ -448,7 +454,7 @@ class BiliApi:
             headers=self.headers.update(
                 {
                     "Content-Type": "application/x-www-form-urlencoded",
-                }
+                },
             ),
         )
 
@@ -473,7 +479,7 @@ class BiliApi:
             headers=self.headers.update(
                 {
                     "Content-Type": "application/x-www-form-urlencoded",
-                }
+                },
             ),
         )
 
@@ -485,7 +491,7 @@ class BiliApi:
             "appkey": Crypto.APPKEY,
             "ts": int(time.time()),
         }
-        list = (
+        list = (  # noqa: A001
             await self.__get(
                 url, params=SingableDict(params).signed, headers=self.headers
             )
@@ -504,7 +510,9 @@ class BiliApi:
             "owner_id": owner_id,
         }
         return await self.__get(
-            url, params=SingableDict(params).signed, headers=self.headers
+            url,
+            params=SingableDict(params).signed,
+            headers=self.headers,
         )
 
     async def getOneBattery(self):
@@ -516,5 +524,7 @@ class BiliApi:
             "ts": int(time.time()),
         }
         return await self.__post(
-            url, data=SingableDict(data).signed, headers=self.headers
+            url,
+            data=SingableDict(data).signed,
+            headers=self.headers,
         )

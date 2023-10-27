@@ -1,6 +1,7 @@
 import asyncio
 import uuid
 from datetime import datetime, timedelta
+from typing import Optional
 
 from aiohttp import ClientSession, ClientTimeout
 from loguru import logger
@@ -26,21 +27,21 @@ class BiliUser:
         access_token: str,
         whiteUIDs: str = "",
         bannedUIDs: str = "",
-        config: dict = {},
+        config: dict = {},  # noqa: B006
     ):
         from .api import BiliApi
 
         self.mid, self.name = 0, ""
         self.access_key = access_token  # 登录凭证
         try:
-            self.whiteList = list(
-                map(lambda x: int(x if x else 0), str(whiteUIDs).split(","))
-            )  # 白名单UID
-            self.bannedList = list(
-                map(lambda x: int(x if x else 0), str(bannedUIDs).split(","))
-            )  # 黑名单
+            self.whiteList = [
+                int(x if x else 0) for x in str(whiteUIDs).split(",")
+            ]  # 白名单UID
+            self.bannedList = [
+                int(x if x else 0) for x in str(bannedUIDs).split(",")
+            ]  # 黑名单
         except ValueError:
-            raise ValueError("白名单或黑名单格式错误")
+            raise ValueError("白名单或黑名单格式错误")  # noqa: TRY200, B904
         self.config = config
         self.medals = []  # 用户所有勋章
         self.medalsNeedDo = []  # 用户所有勋章，等级小于20的 未满1500的
@@ -67,9 +68,7 @@ class BiliUser:
             return False
         userInfo = await self.api.getUserInfo()
         if userInfo["medal"]:
-            medalInfo = await self.api.getMedalsInfoByUid(
-                userInfo["medal"]["target_id"]
-            )
+            medalInfo = await self.api.getMedalsInfoByUid(userInfo["medal"]["target_id"])
             if medalInfo["has_fans_medal"]:
                 self.initialMedal = medalInfo["my_fans_medal"]
         self.log = logger.success(str(loginInfo["mid"]) + " 登录成功")
@@ -80,9 +79,7 @@ class BiliUser:
         try:
             signInfo = await self.api.doSign()
             log.success(
-                "签到成功,本月签到次数: {}/{}".format(
-                    signInfo["hadSignDays"], signInfo["allDays"]
-                )
+                "签到成功,本月签到次数: {}/{}".format(signInfo["hadSignDays"], signInfo["allDays"])
             )
             self.message.append(
                 f"【{self.name}】 签到成功,本月签到次数: {signInfo['hadSignDays']}/{signInfo['allDays']}"
@@ -97,7 +94,7 @@ class BiliUser:
             )
         )
         self.message.append(
-            f"【{self.name}】 UL等级: {userInfo['exp']['user_level']} ,还差 {userInfo['exp']['unext']} 经验升级"
+            f"【{self.name}】 UL等级: {userInfo['exp']['user_level']} ,还差 {userInfo['exp']['unext']} 经验升级",
         )
 
     async def getMedals(self):
@@ -124,7 +121,7 @@ class BiliUser:
             if medal["medal"]["level"] < 20 and medal["medal"]["today_feed"] < 1500
         ]
 
-    async def asynclikeandShare(self, failedMedals: list = []):
+    async def asynclikeandShare(self, failedMedals: list = []):  # noqa: B006
         """
         点赞 、 分享
         """
@@ -201,12 +198,13 @@ class BiliUser:
                 self.retryTimes += 1
                 log.warning("重试次数: {}/{}".format(self.retryTimes, self.maxRetryTimes))
                 await self.asynclikeandShare(failedMedals)
-        except Exception as e:
+        except Exception:
             log.exception("点赞、分享任务异常")
-            log.debug(e)
             self.errmsg.append(f"【{self.name}】 点赞、分享任务异常,请检查日志")
 
-    async def like_v3(self, failedMedals: list = []):
+    async def like_v3(self, failedMedals: Optional[list] = None):
+        if failedMedals is None:
+            failedMedals = []
         if self.config["LIKE_CD"] == 0:
             log.info("点赞任务已关闭")
             return
@@ -252,9 +250,8 @@ class BiliUser:
                 len(self.medalsNeedDo), len(finallyMedals)
             )
             log.info(msg)
-        except Exception as e:
+        except Exception:
             log.exception("点赞任务异常")
-            log.debug(e)
             self.errmsg.append(f"【{self.name}】 点赞任务异常,请检查日志")
 
     async def sendDanmaku(self):
@@ -283,11 +280,9 @@ class BiliUser:
                     ),
                 )
             except Exception as e:
-                log.error(
-                    "{} 房间弹幕打卡失败: {}".format(medal["anchor_info"]["nick_name"], e)
-                )
+                log.error("{} 房间弹幕打卡失败: {}".format(medal["anchor_info"]["nick_name"], e))
                 self.errmsg.append(
-                    f"【{self.name}】 {medal['anchor_info']['nick_name']} 房间弹幕打卡失败: {str(e)}"
+                    f"【{self.name}】 {medal['anchor_info']['nick_name']} 房间弹幕打卡失败: {e!s}"
                 )
             finally:
                 await asyncio.sleep(self.config["DANMAKU_CD"])
@@ -304,7 +299,7 @@ class BiliUser:
                 self.message.append(f"【{self.name}】 领取电池成功")
             except Exception as e:
                 log.error("领取电池失败: {}".format(e))
-                self.errmsg.append(f"【{self.name}】 领取电池失败: {str(e)}")
+                self.errmsg.append(f"【{self.name}】 领取电池失败: {e!s}")
 
     async def init(self):
         if not await self.loginVerify():
@@ -368,17 +363,17 @@ class BiliUser:
             if initialMedalInfo["has_fans_medal"]:
                 initialMedal = initialMedalInfo["my_fans_medal"]
                 self.message.append(
-                    f"【当前佩戴】「{initialMedal['medal_name']}」({initialMedal['target_name']}) {initialMedal['level']} 级 "
+                    f"【当前佩戴】「{initialMedal['medal_name']}」({initialMedal['target_name']}) {initialMedal['level']} 级 ",
                 )
                 if initialMedal["level"] < 20 and initialMedal["today_feed"] != 0:
                     need = initialMedal["next_intimacy"] - initialMedal["intimacy"]
                     need_days = need // 1500 + 1
                     end_date = datetime.now() + timedelta(days=need_days)
                     self.message.append(
-                        f"今日已获取亲密度 {initialMedal['today_feed']} (B站结算有延迟，请耐心等待)"
+                        f"今日已获取亲密度 {initialMedal['today_feed']} (B站结算有延迟，请耐心等待)",
                     )
                     self.message.append(
-                        f"距离下一级还需 {need} 亲密度 预计需要 {need_days} 天 ({end_date.strftime('%Y-%m-%d')},以每日 1500 亲密度计算)"
+                        f"距离下一级还需 {need} 亲密度 预计需要 {need_days} 天 ({end_date.strftime('%Y-%m-%d')},以每日 1500 亲密度计算)",
                     )
         await self.session.close()
         return self.message + self.errmsg + ["---"]

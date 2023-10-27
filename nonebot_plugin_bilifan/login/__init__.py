@@ -1,6 +1,5 @@
 import asyncio
 import hashlib
-import os
 import shutil
 import time
 import urllib.parse as urlparse
@@ -52,8 +51,7 @@ async def get_tv_qrcode_url_and_auth_code():
                 qrcode_url = resp_data["data"]["url"]
                 auth_code = resp_data["data"]["auth_code"]
                 return qrcode_url, auth_code
-            else:
-                raise Exception("get_tv_qrcode_url_and_auth_code error")
+            raise Exception("get_tv_qrcode_url_and_auth_code error")
 
 
 async def verify_login(auth_code, data_path):
@@ -85,20 +83,19 @@ async def verify_login(auth_code, data_path):
                 logger.success("登录成功")
                 with open(data_path / "login_info.txt", "w") as f:
                     f.write(access_key)
-                if not os.path.exists(data_path / "users.yaml"):
+                if not Path(data_path / "users.yaml").is_file():
                     logger.info("初始化配置文件")
                     shutil.copy2(
                         Path().joinpath("data/bilifan/users.yaml"),
                         data_path / "users.yaml",
                     )
-                with open(data_path / "users.yaml", "r", encoding="utf-8") as f:
+                with Path(data_path / "users.yaml").open("r", encoding="utf-8") as f:
                     config = yaml.safe_load(f)
                 config["USERS"][0]["access_key"] = access_key
-                with open(data_path / "users.yaml", "w", encoding="utf-8") as f:
+                with Path(data_path / "users.yaml").open("w", encoding="utf-8") as f:
                     yaml.dump(config, f, allow_unicode=True, default_flow_style=False)
                 return "access_key已保存"
-            else:
-                time.sleep(3)
+            await asyncio.sleep(3)
 
 
 appkey = "4409e2ce8ffd12b8"
@@ -112,29 +109,28 @@ async def signature(params: dict):
     keys.sort()
     query = "&".join([k + "=" + urlparse.quote(params[k]) for k in keys])
     query += appsec
-    hash = hashlib.md5(query.encode("utf-8"))
-    params["sign"] = hash.hexdigest()
+    hash_ = hashlib.md5(query.encode("utf-8"))
+    params["sign"] = hash_.hexdigest()
 
 
 async def map_to_string(params: dict) -> str:
-    query = "&".join([k + "=" + v for k, v in params.items()])
-    return query
+    return "&".join([k + "=" + v for k, v in params.items()])
 
 
-async def draw_QR(login_url):
+async def draw_QR(login_url: str):  # noqa: N802
     "绘制二维码"
-    qr = qrcode.QRCode(version=1, box_size=10, border=4)
+    qr = qrcode.QRCode(version=1, box_size=10, border=4)  # type: ignore
     qr.add_data(login_url)
     qr.make(fit=True)
     img = qr.make_image(fill_color="black", back_color="white")
     buffered = BytesIO()
     img.save(buffered, format="PNG")
-    img_bytes = buffered.getvalue()
-    return img_bytes
+    return buffered.getvalue()
     # img.save("qrcode.png")
 
 
 # async def loginBili():
+
 
 #     login_url, auth_code = await get_tv_qrcode_url_and_auth_code()
 #     qrcode_terminal.draw(login_url)
@@ -146,6 +142,7 @@ async def draw_QR(login_url):
 #         else:
 #             time.sleep(3)
 #             print("等待扫码登录中...")
+
 
 # async def main():
 #     loginBili()
