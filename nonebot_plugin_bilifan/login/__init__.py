@@ -25,7 +25,7 @@ base_path = Path().joinpath("data/bilifan")
 async def is_login(session, cookies):
     api = "https://api.bilibili.com/x/web-interface/nav"
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
     }
     async with session.get(api, headers=headers, cookies=cookies) as resp:
         data = await resp.json()
@@ -81,7 +81,7 @@ async def verify_login(auth_code, data_path):
 
             if code == 0:
                 logger.success("登录成功")
-                with open(data_path / "login_info.txt", "w") as f:
+                with Path(data_path / "login_info.txt").open("w") as f:
                     f.write(access_key)
                 if not Path(data_path / "users.yaml").is_file():
                     logger.info("初始化配置文件")
