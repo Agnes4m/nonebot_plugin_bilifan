@@ -25,7 +25,7 @@ from nonebot_plugin_saa import Image, MessageFactory  # noqa: E402
 logger.opt(colors=True).info(
     "已检测到软依赖<y>nonebot_plugin_apscheduler</y>, <g>开启定时任务功能</g>"
     if scheduler
-    else "未检测到软依赖<y>nonebot_plugin_apscheduler</y>，<r>禁用定时任务功能</r>"
+    else "未检测到软依赖<y>nonebot_plugin_apscheduler</y>，<r>禁用定时任务功能</r>",
 )
 
 
@@ -47,7 +47,7 @@ __plugin_meta__ = PluginMetadata(
 login_in = on_command("blogin", aliases={"b站登录"}, block=False)
 login_del = on_command("blogin_del", aliases={"删除登录信息"}, block=False)
 fan_once = on_command("bfan", aliases={"开始刷牌子", "开始粉丝牌"}, block=False)
-fan_once = on_command("addfan", aliases={"自动刷牌子", "自动粉丝牌"}, priority=40, block=False)
+fan_auto = on_command("addfan", aliases={"自动刷牌子", "自动粉丝牌"}, priority=40, block=False)
 del_only = on_command("bdel", aliases={"取消自动刷牌子", "取消自动粉丝牌"}, block=False)
 del_all = on_command("bdel_all", aliases={"删除全部定时任务"}, block=False, permission=SUPERUSER)
 
@@ -118,7 +118,7 @@ async def _(matcher: Matcher, event: Event):
         await matcher.finish("你尚未登录，请输入【b站登录】")
 
 
-@fan_once.handle()
+@fan_auto.handle()
 async def _(matcher: Matcher, event: Event):
     config = load_config()
     group_id = event.get_session_id()
@@ -135,7 +135,7 @@ async def _(matcher: Matcher, event: Event):
             try:
                 fields = cron.split(" ")
                 await matcher.finish(
-                    f"已增加{event.get_user_id()}的定时任务，将在每天{fields[0]}时{fields[1]}分开始执行~"
+                    f"已增加{event.get_user_id()}的定时任务，将在每天{fields[0]}时{fields[1]}分开始执行~",
                 )
             except AttributeError:
                 await matcher.finish("定时格式不正确，无法设置定时任务")
