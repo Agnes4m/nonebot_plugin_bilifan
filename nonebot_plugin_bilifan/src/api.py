@@ -93,8 +93,9 @@ def client_sign(data: dict):
 def randomString(length: int = 16) -> str:
     return "".join(
         random.sample(
-            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", length
-        )
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+            length,
+        ),
     )
 
 
@@ -148,7 +149,9 @@ class BiliApi:
         first_flag = True
         while True:
             data = await self.__get(
-                url, params=SingableDict(params).signed, headers=self.headers
+                url,
+                params=SingableDict(params).signed,
+                headers=self.headers,
             )
             if first_flag and data["special_list"]:
                 for item in data["special_list"]:
@@ -446,7 +449,7 @@ class BiliApi:
                 "actionKey": "appkey",
                 "appkey": Crypto.APPKEY,
                 "ts": int(time.time()),
-            }  # type: ignore
+            },  # type: ignore
         )  # type: ignore
         return await self.__post(
             url,
@@ -493,7 +496,9 @@ class BiliApi:
         }
         list = (  # noqa: A001
             await self.__get(
-                url, params=SingableDict(params).signed, headers=self.headers
+                url,
+                params=SingableDict(params).signed,
+                headers=self.headers,
             )
         )["list"]
         for group in list:
