@@ -491,12 +491,12 @@ class BiliApi:
             "appkey": Crypto.APPKEY,
             "ts": int(time.time()),
         }
-        list = (  # noqa: A001
-            await self.__get(
-                url, params=SingableDict(params).signed, headers=self.headers
-            )
-        )["list"]
-        for group in list:
+        list_msg = await self.__get(
+            url, params=SingableDict(params).signed, headers=self.headers
+        )
+        print(list_msg)
+        list_m = list_msg["list"]
+        for group in list_m:
             yield group
 
     async def signInGroups(self, group_id: int, owner_id: int):

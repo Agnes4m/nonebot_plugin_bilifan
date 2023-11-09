@@ -175,4 +175,9 @@ async def _():
     if scheduler is None:
         logger.error("定时格式不正确，不启用定时功能")
         return
-    scheduler.add_job(auto_cup, "cron", hour=fields[0], minute=fields[1], id="auto_cup")
+    try:
+        scheduler.add_job(
+            auto_cup, "cron", hour=fields[0], minute=fields[1], id="auto_cup",
+        )
+    except Exception:
+        logger.warning("定时任务已存在")
