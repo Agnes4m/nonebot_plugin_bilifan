@@ -66,7 +66,8 @@ async def auto_cup():
     if count:
         for group_id, num in count.items():
             await get_bot().send_group_msg(
-                group_id=group_id, message=f"今日已完成{num}个自动刷牌子任务"
+                group_id=group_id,
+                message=f"今日已完成{num}个自动刷牌子任务",
             )
     if message_str:
         for user_id, group_id in config.items():
@@ -89,6 +90,6 @@ def render_forward_msg(msg_list: list, uid=2711142767, name="宁宁"):
             {
                 "type": "node",
                 "data": {"name": str(name), "uin": str(uid), "content": msg},
-            }
+            },
         )
     return forward_msg

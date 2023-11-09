@@ -79,10 +79,12 @@ class BiliUser:
         try:
             signInfo = await self.api.doSign()
             log.success(
-                "签到成功,本月签到次数: {}/{}".format(signInfo["hadSignDays"], signInfo["allDays"])
+                "签到成功,本月签到次数: {}/{}".format(
+                    signInfo["hadSignDays"], signInfo["allDays"]
+                ),
             )
             self.message.append(
-                f"【{self.name}】 签到成功,本月签到次数: {signInfo['hadSignDays']}/{signInfo['allDays']}"
+                f"【{self.name}】 签到成功,本月签到次数: {signInfo['hadSignDays']}/{signInfo['allDays']}",
             )
         except Exception as e:
             log.error(e)
@@ -90,8 +92,9 @@ class BiliUser:
         userInfo = await self.api.getUserInfo()
         log.info(
             "当前用户UL等级: {} ,还差 {} 经验升级".format(
-                userInfo["exp"]["user_level"], userInfo["exp"]["unext"]
-            )
+                userInfo["exp"]["user_level"],
+                userInfo["exp"]["unext"],
+            ),
         )
         self.message.append(
             f"【{self.name}】 UL等级: {userInfo['exp']['user_level']} ,还差 {userInfo['exp']['unext']} 经验升级",
@@ -139,27 +142,27 @@ class BiliUser:
                 for index, medal in enumerate(failedMedals):
                     tasks = []
                     tasks.append(
-                        self.api.likeInteract(medal["room_info"]["room_id"])
+                        self.api.likeInteract(medal["room_info"]["room_id"]),
                     ) if self.config["LIKE_CD"] else ...
                     tasks.append(
-                        self.api.shareRoom(medal["room_info"]["room_id"])
+                        self.api.shareRoom(medal["room_info"]["room_id"]),
                     ) if self.config["SHARE_CD"] else ...
                     await asyncio.gather(*tasks)
                     log.success(
                         f"{medal['anchor_info']['nick_name']} 点赞,分享成功 {index+1}/{len(self.medalsNeedDo)}",
                     )
                     await asyncio.sleep(
-                        max(self.config["LIKE_CD"], self.config["SHARE_CD"])
+                        max(self.config["LIKE_CD"], self.config["SHARE_CD"]),
                     )
             else:
                 log.info("异步点赞、分享任务开始....")
                 allTasks = []
                 for medal in failedMedals:
                     allTasks.append(
-                        self.api.likeInteract(medal["room_info"]["room_id"])
+                        self.api.likeInteract(medal["room_info"]["room_id"]),
                     ) if self.config["LIKE_CD"] else ...
                     allTasks.append(
-                        self.api.shareRoom(medal["room_info"]["room_id"])
+                        self.api.shareRoom(medal["room_info"]["room_id"]),
                     ) if self.config["SHARE_CD"] else ...
                 await asyncio.gather(*allTasks)
             await asyncio.sleep(10)
@@ -176,7 +179,8 @@ class BiliUser:
                 if medal["medal"]["today_feed"] < 200
             ]
             msg = "20级以下牌子共 {} 个,完成任务 {} 个亲密度大于等于200".format(
-                len(self.medalsNeedDo), len(finallyMedals)
+                len(self.medalsNeedDo),
+                len(finallyMedals),
             )
             log.info(msg)
             log.warning(
@@ -185,7 +189,7 @@ class BiliUser:
                         [
                             medals["anchor_info"]["nick_name"]
                             for medals in failedMedals[:5]
-                        ]
+                        ],
                     ),
                     len(failedMedals),
                 ),
@@ -220,7 +224,7 @@ class BiliUser:
                             medal["room_info"]["room_id"],
                             medal["medal"]["target_id"],
                             self.mid,
-                        )
+                        ),
                     ) if self.config["LIKE_CD"] else ...
                     await asyncio.gather(*tasks)
                     log.success(
@@ -236,7 +240,7 @@ class BiliUser:
                             medal["room_info"]["room_id"],
                             medal["medal"]["target_id"],
                             self.mid,
-                        )
+                        ),
                     ) if self.config["LIKE_CD"] else ...
                 await asyncio.gather(*allTasks)
             await asyncio.sleep(10)
@@ -247,7 +251,8 @@ class BiliUser:
                 if medal["medal"]["today_feed"] >= 100
             ]
             msg = "20级以下牌子共 {} 个,完成点赞任务 {} 个".format(
-                len(self.medalsNeedDo), len(finallyMedals)
+                len(self.medalsNeedDo),
+                len(finallyMedals),
             )
             log.info(msg)
         except Exception:
@@ -263,8 +268,8 @@ class BiliUser:
             return
         log.info(
             "弹幕打卡任务开始....(预计 {} 秒完成)".format(
-                len(self.medals) * self.config["DANMAKU_CD"]
-            )
+                len(self.medals) * self.config["DANMAKU_CD"],
+            ),
         )
         n = 0
         for medal in self.medals:
@@ -276,13 +281,16 @@ class BiliUser:
                 n += 1
                 log.success(
                     "{} 房间弹幕打卡成功: {} ({}/{})".format(
-                        medal["anchor_info"]["nick_name"], danmaku, n, len(self.medals)
+                        medal["anchor_info"]["nick_name"],
+                        danmaku,
+                        n,
+                        len(self.medals),
                     ),
                 )
             except Exception as e:
                 log.error("{} 房间弹幕打卡失败: {}".format(medal["anchor_info"]["nick_name"], e))
                 self.errmsg.append(
-                    f"【{self.name}】 {medal['anchor_info']['nick_name']} 房间弹幕打卡失败: {e!s}"
+                    f"【{self.name}】 {medal['anchor_info']['nick_name']} 房间弹幕打卡失败: {e!s}",
                 )
             finally:
                 await asyncio.sleep(self.config["DANMAKU_CD"])
@@ -353,12 +361,12 @@ class BiliUser:
                     f"{n}"
                     + " ".join(l[:5])
                     + f"{'等' if len(l) > 5 else ''}"
-                    + f" {len(l)}个"
+                    + f" {len(l)}个",
                 )
 
         if hasattr(self, "initialMedal"):
             initialMedalInfo = await self.api.getMedalsInfoByUid(
-                self.initialMedal["target_id"]
+                self.initialMedal["target_id"],
             )
             if initialMedalInfo["has_fans_medal"]:
                 initialMedal = initialMedalInfo["my_fans_medal"]
@@ -390,8 +398,9 @@ class BiliUser:
             for medal in self.medalsNeedDo:
                 tasks.append(
                     self.api.heartbeat(
-                        medal["room_info"]["room_id"], medal["medal"]["target_id"]
-                    )
+                        medal["room_info"]["room_id"],
+                        medal["medal"]["target_id"],
+                    ),
                 )
             await asyncio.gather(*tasks)
             heartNum += 1
