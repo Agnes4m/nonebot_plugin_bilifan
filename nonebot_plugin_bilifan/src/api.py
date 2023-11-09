@@ -495,7 +495,9 @@ class BiliApi:
             "ts": int(time.time()),
         }
         list_msg = await self.__get(
-            url, params=SingableDict(params).signed, headers=self.headers
+            url,
+            params=SingableDict(params).signed,
+            headers=self.headers,
         )
         print(list_msg)
         list_m = list_msg["list"]

@@ -80,7 +80,8 @@ class BiliUser:
             signInfo = await self.api.doSign()
             log.success(
                 "签到成功,本月签到次数: {}/{}".format(
-                    signInfo["hadSignDays"], signInfo["allDays"]
+                    signInfo["hadSignDays"],
+                    signInfo["allDays"],
                 ),
             )
             self.message.append(

@@ -177,7 +177,11 @@ async def _():
         return
     try:
         scheduler.add_job(
-            auto_cup, "cron", hour=fields[0], minute=fields[1], id="auto_cup",
+            auto_cup,
+            "cron",
+            hour=fields[0],
+            minute=fields[1],
+            id="auto_cup",
         )
     except Exception:
         logger.warning("定时任务已存在")
