@@ -493,7 +493,7 @@ class BiliApi:
         )
 
     async def getGroups(self):
-        url = "https://api.live.bilibili.com/link_group/v1/member/my_groups"
+        url = "https://api.vc.bilibili.com/link_group/v1/member/my_groups?build=0&mobi_app=web"
         params = {
             "access_key": self.u.access_key,
             "actionKey": "appkey",
