@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_bilifan"
-version = "0.3.0-post2"
+version = "0.3.1"
 description = "刷站粉丝牌子的机器人插件"
 authors = ["Agnes_Digital <Z735803792@163.com>"]
 license = "GPLv3"
@@ -27,7 +27,7 @@ nonebot2 = "^2.0.0"
 nonebot-adapter-onebot = ">=2.1.5"
 nonebot_plugin_apscheduler = ">=0.3.0"
 nonebot-plugin-send-anything-anywhere = ">=0.3.2"
-pillow = ">=9.3.0"
+pillow = "<=9.3.0"
 aiohttp-socks = "^0.8.0"
 pyyaml = "^6.0"
 qrcode = "^7.4.2"
