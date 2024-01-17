@@ -178,15 +178,16 @@ class BiliApi:
             "click_time": 1,
             "roomid": room_id,
         }
+        self.headers.update(
+            {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+        )
         # for _ in range(3):
         await self.__post(
             url,
             data=SingableDict(data).signed,
-            headers=self.headers.update(
-                {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-            ),
+            headers=self.headers,
         )
         # await asyncio.sleep(self.u.config['LIKE_CD'] if not self.u.config['ASYNC'] else 2)
 
@@ -204,15 +205,16 @@ class BiliApi:
             "anchor_id": up_id,
             "uid": self_uid,
         }
+        self.headers.update(
+            {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+        )
         # for _ in range(3):
         await self.__post(
             url,
             data=SingableDict(data).signed,
-            headers=self.headers.update(
-                {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-            ),
+            headers=self.headers,
         )
 
     async def shareRoom(self, room_id: int):
@@ -228,15 +230,16 @@ class BiliApi:
             "interact_type": 3,
             "roomid": room_id,
         }
+        self.headers.update(
+            {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+        )
         # for _ in range(5):
         await self.__post(
             url,
             data=SingableDict(data).signed,
-            headers=self.headers.update(
-                {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-            ),
+            headers=self.headers,
         )
         # await asyncio.sleep(self.u.config['SHARE_CD'] if not self.u.config['ASYNC'] else 5)
 
@@ -275,16 +278,17 @@ class BiliApi:
             "color": "16777215",
             "fontsize": "25",
         }
+        self.headers.update(
+            {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+        )
         try:
             resp = await self.__post(
                 url,
                 params=SingableDict(params).signed,
                 data=data,
-                headers=self.headers.update(
-                    {
-                        "Content-Type": "application/x-www-form-urlencoded",
-                    },
-                ),
+                headers=self.headers,
             )
         except BiliApiError as e:
             if e.code == 0:
@@ -451,14 +455,15 @@ class BiliApi:
                 "ts": int(time.time()),
             },  # type: ignore
         )  # type: ignore
+        self.headers.update(
+            {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+        )
         return await self.__post(
             url,
             data=SingableDict(data).signed,
-            headers=self.headers.update(
-                {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-            ),
+            headers=self.headers,
         )
 
     async def wearMedal(self, medal_id: int):
@@ -476,14 +481,15 @@ class BiliApi:
             "type": "1",
             "version": "0",
         }
+        self.headers.update(
+            {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+        )
         return await self.__post(
             url,
             data=SingableDict(data).signed,
-            headers=self.headers.update(
-                {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-            ),
+            headers=self.headers,
         )
 
     async def getGroups(self):
