@@ -20,42 +20,45 @@ from nonebot.log import logger
 csrf = ""
 access_key = ""
 base_path = Path().joinpath("data/bilifan")
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+}
 
 
 async def is_login(session, cookies):
     api = "https://api.bilibili.com/x/web-interface/nav"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
-    }
+
     async with session.get(api, headers=headers, cookies=cookies) as resp:
         data = await resp.json()
         return data["code"] == 0, data["data"]["uname"]
 
 
 async def get_tv_qrcode_url_and_auth_code():
-    api = "http://passport.bilibili.com/x/passport-tv-login/qrcode/auth_code"
+    api = "https://passport.bilibili.com/x/passport-login/web/qrcode/generate"
     data = {
         "local_id": "0",
         "ts": str(int(time.time())),
     }
     await signature(data)
     async with aiohttp.ClientSession() as session:
-        async with session.post(
+        async with session.get(
             api,
             data=await map_to_string(data),
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            headers=headers,
+            # headers={"Content-Type": "application/x-www-form-urlencoded"},
         ) as resp:
+            print(resp)
             resp_data = await resp.json()
             code = resp_data["code"]
             if code == 0:
-                qrcode_url = resp_data["data"]["url"]
-                auth_code = resp_data["data"]["auth_code"]
-                return qrcode_url, auth_code
+                login_url = resp_data["data"]["url"]
+                login_key = resp_data["data"]["qrcode_key"]
+                return login_url, login_key
             raise Exception("get_tv_qrcode_url_and_auth_code error")
 
 
 async def verify_login(auth_code, data_path):
-    api = "http://passport.bilibili.com/x/passport-tv-login/qrcode/poll"
+    api = "https://passport.bilibili.com/x/passport-login/web/qrcode/poll"
     data = {
         "auth_code": auth_code,
         "local_id": "0",
@@ -63,13 +66,11 @@ async def verify_login(auth_code, data_path):
     }
     await signature(data)
     data_string = await map_to_string(data)
-    headers = {
-        "Content-Type": "application/x-www-form-urlencoded",
-    }
     while True:
         async with aiohttp.ClientSession() as session:
-            async with session.post(api, headers=headers, data=data_string) as resp:
+            async with session.get(api, headers=headers) as resp:
                 if resp.status != 200:
+                    print(resp)
                     raise Exception("Failed to connect to server")
                 response_dict = await resp.json()
                 code = response_dict["code"]

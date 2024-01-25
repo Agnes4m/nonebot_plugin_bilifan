@@ -12,7 +12,6 @@ from .src import BiliUser
 
 local_path = Path(__file__).parent
 
-__VERSION__ = "0.3.6"
 
 warnings.filterwarnings(
     "ignore",

@@ -1,7 +1,7 @@
 import shutil
 from pathlib import Path
 
-import aiohttp
+# import aiohttp
 from nonebot import get_driver, on_command, require
 from nonebot.adapters import Event
 from nonebot.log import logger
@@ -54,10 +54,11 @@ del_all = on_command("bdel_all", aliases={"删除全部定时任务"}, block=Fal
 
 @login_in.handle()
 async def _(matcher: Matcher, event: Event):
-    try:
-        login_url, auth_code = await get_tv_qrcode_url_and_auth_code()
-    except aiohttp:
-        await matcher.finish("已超时，请稍后重试！")
+    # try:
+    login_url, auth_code = await get_tv_qrcode_url_and_auth_code()
+    # except Exception as e:
+    #     print(e)
+    #     await matcher.finish("已超时，请稍后重试！")
     data_path = Path().joinpath(f"data/bilifan/{event.get_user_id()}")
     data_path.mkdir(parents=True, exist_ok=True)
     data = await draw_QR(login_url)

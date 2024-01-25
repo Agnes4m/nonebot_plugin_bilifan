@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD024 MD026 MD031 MD033 MD036 MD041 -->
 <div align="center">
   <img src="https://raw.githubusercontent.com/Agnes4m/nonebot_plugin_l4d2_server/main/image/logo.png" width="180" height="180"  alt="AgnesDigitalLogo">
   <br>
@@ -7,6 +8,7 @@
 <div align="center">
 
 # nonebot_plugin_bilifan
+
 _✨自动b站粉丝牌✨_
 
 <a href="https://github.com/Agnes4m/nonebot_plugin_bilifan/stargazers">
@@ -38,7 +40,6 @@ _✨自动b站粉丝牌✨_
 - 自动刷牌子 - 添加或取消定时任务
 - 取消自动刷牌子 - 取消定时任务
 - 删除全部的定时任务 - [超管]删除全部的定时任务
-
 
 </details>
 
