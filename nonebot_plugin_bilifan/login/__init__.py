@@ -47,8 +47,8 @@ async def get_tv_qrcode_url_and_auth_code():
             headers=headers,
             # headers={"Content-Type": "application/x-www-form-urlencoded"},
         ) as resp:
-            print(resp)
             resp_data = await resp.json()
+            print(resp_data)
             code = resp_data["code"]
             if code == 0:
                 login_url = resp_data["data"]["url"]
@@ -57,32 +57,49 @@ async def get_tv_qrcode_url_and_auth_code():
             raise Exception("get_tv_qrcode_url_and_auth_code error")
 
 
-async def verify_login(auth_code, data_path):
+async def verify_login(login_key: str, data_path: Path):
     api = "https://passport.bilibili.com/x/passport-login/web/qrcode/poll"
-    data = {
-        "auth_code": auth_code,
-        "local_id": "0",
-        "ts": str(int(time.time())),
-    }
-    await signature(data)
-    data_string = await map_to_string(data)
+    # data = {
+    #     "auth_code": api,
+    #     "local_id": "0",
+    #     "ts": str(int(time.time())),
+    # }
+    api += "?" + "qrcode_key=" + login_key
+    # await signature(data)
+    # data_string = await map_to_string(data)
     while True:
         async with aiohttp.ClientSession() as session:
             async with session.get(api, headers=headers) as resp:
                 if resp.status != 200:
-                    print(resp)
                     raise Exception("Failed to connect to server")
                 response_dict = await resp.json()
-                code = response_dict["code"]
+                print(response_dict)
+                url = response_dict["data"]["url"]
+                access_key = response_dict["data"]["refresh_token"]
+                print(access_key)
+                cookie = {}
+                filename = "login_info.txt"
+                cookie_content = ""
                 try:
-                    access_key = response_dict["data"]["access_token"]
+                    kv_arr = []
+                    for _, v in resp.headers["Set-Cookie"]:
+                        kv = v.split(";")[0].strip()
+                        kv_arr = kv.split("=")
+                    print(f"kr代码:{kv_arr}")
+                    cookie[kv_arr[0]] = kv_arr[1]
+                    filename: str = cookie["DedeUserID"] + "_cookie.txt"
+                    cookie_content = f"DedeUserID={cookie['DedeUserID']};DedeUserID__ckMd5={cookie['DedeUserID__ckMd5']};Expires={cookie['Expires']};SESSDATA={cookie['SESSDATA']};bili_jct={cookie['bili_jct']};"
+                    print(f"ck代码{cookie_content}")
+
                 except Exception:
-                    access_key = ""
+                    # access_key = ""
                     await asyncio.sleep(3)
 
-            if code == 0:
+            if url != "":
                 logger.success("登录成功")
-                with Path(data_path / "login_info.txt").open("w") as f:
+                data_path.mkdir(parents=True, exist_ok=True)
+                print(f"access_key代码{access_key}")
+                with (data_path / filename).open(mode="w", encoding="utf-8") as f:
                     f.write(access_key)
                 if not Path(data_path / "users.yaml").is_file():
                     logger.info("初始化配置文件")
