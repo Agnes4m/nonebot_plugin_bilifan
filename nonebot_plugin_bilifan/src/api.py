@@ -203,7 +203,7 @@ class BiliApi:
             "click_time": 1,
             "room_id": room_id,
             "anchor_id": up_id,
-            "uid": up_id,
+            "uid": self_uid,
         }
         self.headers.update(
             {

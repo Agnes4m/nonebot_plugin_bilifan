@@ -48,7 +48,6 @@ async def get_tv_qrcode_url_and_auth_code():
             # headers={"Content-Type": "application/x-www-form-urlencoded"},
         ) as resp:
             resp_data = await resp.json()
-            print(resp_data)
             code = resp_data["code"]
             if code == 0:
                 login_url = resp_data["data"]["url"]
@@ -73,6 +72,7 @@ async def verify_login(login_key: str, data_path: Path):
                 if resp.status != 200:
                     raise Exception("Failed to connect to server")
                 response_dict = await resp.json()
+                print("验证模式")
                 print(response_dict)
                 url = response_dict["data"]["url"]
                 access_key = response_dict["data"]["refresh_token"]

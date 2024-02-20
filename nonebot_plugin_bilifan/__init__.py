@@ -1,5 +1,6 @@
 import shutil
 from pathlib import Path
+from typing import List
 
 # import aiohttp
 from nonebot import get_driver, on_command, require
@@ -30,7 +31,7 @@ logger.opt(colors=True).info(
 
 
 driver = get_driver()
-__version__ = "0.3.0"
+__version__ = "0.3.3"
 __plugin_meta__ = PluginMetadata(
     name="bilifan",
     description="b站粉丝牌~",
@@ -112,7 +113,7 @@ async def _(matcher: Matcher, event: Event):
         else:
             logger.info(msg_path)
             await matcher.finish("你尚未登录，请输入【b站登录】")
-        messageList = await mains(msg_path.parent)
+        messageList:List[str] = await mains(msg_path.parent)
         message_str = "\n".join(messageList)
         await matcher.finish(message_str)
     except (FileNotFoundError, SystemExit):
@@ -185,4 +186,5 @@ async def _():
             id="auto_cup",
         )
     except Exception:
+        logger.warning("定时任务已存在")
         logger.warning("定时任务已存在")
