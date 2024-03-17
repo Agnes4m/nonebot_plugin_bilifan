@@ -58,7 +58,7 @@ async def auto_cup():
         messageList.append((user_id, group_id, message))
 
     for user_id, group_id, message in messageList:
-        messageStr = "".join(message)
+        messageStr = "\n".join(message)
         logger.info(f"{user_id}用户自动刷牌子任务执行完成，{messageStr}")
         if group_id.startswith("group"):
             group_num = group_id.split("_")[1]
