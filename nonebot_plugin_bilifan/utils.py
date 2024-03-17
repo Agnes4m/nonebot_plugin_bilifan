@@ -45,37 +45,35 @@ async def auto_cup():
     tasks = []
 
     for user_id, group_id in config.items():  # noqa: B007
-        msg_path = Path().joinpath(f"data/bilifan/{user_id}/login_info.txt")
-        if msg_path.is_file:
-            pass
+        msg_path = Path(f"data/bilifan/{user_id}/login_info.txt")
+        if msg_path.is_file():
+            task = asyncio.create_task(mains(msg_path.parent))
+            tasks.append((user_id, group_id, task))
         else:
-            logger.warning("usr_id尚未登录，已忽略")
-            logger.warning("usr_id尚未登录，已忽略")
-            continue
-
-        task = asyncio.create_task(mains(msg_path.parent))
-        tasks.append(task)
+            logger.warning(f"{user_id}尚未登录，已忽略")
 
     messageList = []
-    for task in asyncio.as_completed(tasks):
-        messageList.extend(await task)
+    for user_id, group_id, task in tasks:
+        message = await task
+        messageList.append((user_id, group_id, message))
 
-    message_str = "\n".join(messageList)
-    message_str = "\n".join(messageList)
+    for user_id, group_id, message in messageList:
+        messageStr = "".join(message)
+        logger.info(f"{user_id}用户自动刷牌子任务执行完成，{messageStr}")
+        if group_id.startswith("group"):
+            group_num = group_id.split("_")[1]
+            if group_num in count:
+                count[group_num] += 1
+            else:
+                count[group_num] = 1
+        await get_bot().send_private_msg(user_id=user_id, message=messageStr)
 
-    if count:
-        for group_id, num in count.items():
+    for group_num, num in count.items():
+        logger.info(f"{group_num}群组自动刷牌子任务执行完成，共{num}个")
             await get_bot().send_group_msg(
-                group_id=group_id,
-                message=f"今日已完成{num}个自动刷牌子任务",
+            group_id=group_num,
+            message=f"本群今日已完成{num}个自动刷牌子任务",
             )
-    if message_str:
-        for user_id, group_id in config.items():
-            if user_id == group_id:
-                await get_bot().send_private_msg(user_id=user_id, message=message_str)
-                continue
-            count_value = count.get(group_id, 0)
-            count[group_id] = count_value + 1
 
 
 def render_forward_msg(msg_list: list, uid=2711142767, name="宁宁"):
