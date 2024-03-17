@@ -312,8 +312,8 @@ class BiliUser:
 
     async def init(self):
         if not await self.loginVerify():
-            log.error("登录失败 可能是 access_key 过期 , 请重新获取")
-            self.errmsg.append("登录失败 可能是 access_key 过期 , 请重新获取")
+            log.error(f"登录失败 可能是 access_key：{self.access_key} 过期 , 请重新获取")
+            self.errmsg.append("登录失败 可能是登录已过期 , 请发送【b站登录】重新登录")
             await self.session.close()
         else:
             await self.doSign()

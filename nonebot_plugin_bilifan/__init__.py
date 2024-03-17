@@ -72,9 +72,10 @@ async def _(matcher: Matcher, event: Event):
         #     )
         # else:
         await MessageFactory(forward_msg).send()
+		await matcher.send("或将此链接复制到手机B站打开:" + login_url)
     except Exception:
         logger.warning("二维码可能被风控，发送链接")
-        await matcher.send("或将此链接复制到手机B站打开:" + login_url)
+        await matcher.send("将此链接复制到手机B站打开:" + login_url)
     while True:
         a = await verify_login(auth_code, data_path)
         if a:
@@ -128,7 +129,13 @@ async def _(matcher: Matcher, event: Event):
     msg_path = Path().joinpath(f"data/bilifan/{event.get_user_id()}/login_info.txt")
     if msg_path.is_file():
         if event.get_user_id() in config:
-            await matcher.finish(f"{event.get_user_id()}的定时任务已存在")
+            users = await read_yaml(Path().joinpath('data/bilifan'))
+            cron = users.get('CRON', None)
+            try:
+                fields = cron.split(" ")
+                await matcher.finish(f"{event.get_user_id()}的定时任务已存在，将在每天{fields[0]}时{fields[1]}分开始执行~")
+            except AttributeError:
+                await matcher.finish('定时格式不正确，请删除定时任务后重新设置')
         else:
             config[event.get_user_id()] = group_id
             save_config(config)
@@ -164,7 +171,6 @@ async def _(matcher: Matcher):
     msg_path.unlink()
     await matcher.finish("已删除全部定时刷牌子任务")
 
-
 @driver.on_bot_connect
 async def _():
     users = await read_yaml(Path().joinpath("data/bilifan"))
@@ -178,6 +184,7 @@ async def _():
         logger.error("定时格式不正确，不启用定时功能")
         return
     try:
+        logger.info(f'定时任务已配置，将在每天{fields[0]}时{fields[1]}分后自动执行~')
         scheduler.add_job(
             auto_cup,
             "cron",
@@ -186,5 +193,4 @@ async def _():
             id="auto_cup",
         )
     except Exception:
-        logger.warning("定时任务已存在")
         logger.warning("定时任务已存在")

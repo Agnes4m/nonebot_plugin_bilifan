@@ -509,8 +509,6 @@ class BiliApi:
             list_m = list_msg["list"]
             for group in list_m:
                 yield group
-        else:
-            ...
 
     async def signInGroups(self, group_id: int, owner_id: int):
         url = "https://api.vc.bilibili.com/link_setting/v1/link_setting/sign_in"
