@@ -67,7 +67,10 @@ async def auto_cup():
             else:
                 count[group_num] = 1
         elif user_id != group_id:
-            count[group_id] += 1
+            if group_id in count:
+                count[group_id] += 1
+            else:
+                count[group_id] = 1
         await get_bot().send_private_msg(user_id=user_id, message=messageStr)
 
     for group_num, num in count.items():
