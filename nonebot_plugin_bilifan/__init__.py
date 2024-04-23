@@ -57,8 +57,8 @@ del_all = on_command("bdel_all", aliases={"删除全部定时任务"}, block=Fal
 async def _(matcher: Matcher, event: Event):
     try:
         login_url, auth_code = await get_tv_qrcode_url_and_auth_code()
-    except Exception:
-        # print(e)
+    except Exception as e:
+        print(e)
         await matcher.finish("已超时，请稍后重试！")
     data_path = Path().joinpath(f"data/bilifan/{event.get_user_id()}")
     data_path.mkdir(parents=True, exist_ok=True)
