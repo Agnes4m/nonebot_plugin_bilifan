@@ -7,7 +7,6 @@ from io import BytesIO
 from pathlib import Path
 
 import aiohttp
-
 import qrcode
 import yaml
 from nonebot.log import logger
@@ -15,6 +14,7 @@ from nonebot.log import logger
 csrf = ""
 access_key = ""
 base_path = Path().joinpath("data/bilifan")
+
 
 async def is_login(session, cookies):
     api = "https://api.bilibili.com/x/web-interface/nav"
@@ -41,7 +41,7 @@ async def get_tv_qrcode_url_and_auth_code():
             headers={
                 "Host": "passport.bilibili.com",
                 "Content-Type": "application/x-www-form-urlencoded",
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36 Edg/97.0.1072.69"
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36 Edg/97.0.1072.69",
             },
         ) as resp:
             if resp.status != 200:
@@ -72,7 +72,7 @@ async def verify_login(login_key: str, data_path: Path):
                 headers={
                     "Host": "passport.bilibili.com",
                     "Content-Type": "application/x-www-form-urlencoded",
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36 Edg/97.0.1072.69"
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36 Edg/97.0.1072.69",
                 },
             ) as resp:
                 if resp.status != 200:
@@ -90,7 +90,7 @@ async def verify_login(login_key: str, data_path: Path):
                 filename = "login_info.txt"
                 data_path.mkdir(parents=True, exist_ok=True)
                 with (data_path / filename).open(mode="w", encoding="utf-8") as f:
-                        f.write(access_key)
+                    f.write(access_key)
                 if not Path(data_path / "users.yaml").is_file():
                     logger.info("初始化配置文件")
                     shutil.copy2(
@@ -104,6 +104,7 @@ async def verify_login(login_key: str, data_path: Path):
                     yaml.dump(config, f, allow_unicode=True, default_flow_style=False)
                 return "access_key已保存"
             await asyncio.sleep(3)
+
 
 appkey = "4409e2ce8ffd12b8"
 appsec = "59b43e04ad6965f34319062b478f83dd"
