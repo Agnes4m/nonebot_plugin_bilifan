@@ -58,7 +58,7 @@ async def get_tv_qrcode_url_and_auth_code():
 async def verify_login(login_key: str, data_path: Path):
     api = "https://passport.bilibili.com/x/passport-tv-login/qrcode/poll"
     data = {
-        "auth_code": auth_code,
+        "auth_code": login_key,
         "local_id": "0",
         "ts": str(int(time.time())),
     }
@@ -97,10 +97,10 @@ async def verify_login(login_key: str, data_path: Path):
                         Path().joinpath("data/bilifan/users.yaml"),
                         data_path / "users.yaml",
                     )
-                with Path(data_path / "users.yaml").open("r", encoding="utf-8") as f:
+                with Path(data_path / "users.yaml").open("r", encoding="utf-8") as f:  # noqa: ASYNC101
                     config = yaml.safe_load(f)
                 config["USERS"][0]["access_key"] = access_key
-                with Path(data_path / "users.yaml").open("w", encoding="utf-8") as f:
+                with Path(data_path / "users.yaml").open("w", encoding="utf-8") as f:  # noqa: ASYNC101
                     yaml.dump(config, f, allow_unicode=True, default_flow_style=False)
                 return "access_key已保存"
             await asyncio.sleep(3)
