@@ -98,14 +98,20 @@ async def verify_login(login_key: str, data_path: Path):
                         Path().joinpath("data/bilifan/users.yaml"),
                         data_path / "users.yaml",
                     )
-                config = yaml.safe_load(await anyio.Path(data_path / "users.yaml").read_text("u8"))
+                config = yaml.safe_load(
+                    await anyio.Path(data_path / "users.yaml").read_text("u8")
+                )
                 # with Path(data_path / "users.yaml").open(
                 #     "r", encoding="utf-8"
                 # ) as f:
                 #     config = yaml.safe_load(f)
-                
+
                 config["USERS"][0]["access_key"] = access_key
-                config = yaml.dump(await anyio.Path(data_path / "users.yaml").write_text("u8"), allow_unicode=True, default_flow_style=False)
+                config = yaml.dump(
+                    await anyio.Path(data_path / "users.yaml").write_text("u8"),
+                    allow_unicode=True,
+                    default_flow_style=False,
+                )
                 # with Path(data_path / "users.yaml").open(
                 #     "w", encoding="utf-8"
                 # ) as f:  # noqa: ASYNC101
