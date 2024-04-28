@@ -114,7 +114,7 @@ async def _(matcher: Matcher, event: Event):
         else:
             logger.info(msg_path)
             await matcher.finish("你尚未登录，请输入【b站登录】")
-        messageList:List[str] = await mains(msg_path.parent)
+        messageList: List[str] = await mains(msg_path.parent)
         message_str = "\n".join(messageList)
         await matcher.finish(message_str)
     except (FileNotFoundError, SystemExit):
@@ -133,7 +133,9 @@ async def _(matcher: Matcher, event: Event):
             cron = users.get("CRON", None)
             try:
                 fields = cron.split(" ")
-                await matcher.finish(f"{event.get_user_id()}的定时任务已存在，将在每天{fields[0]}时{fields[1]}分开始执行~")
+                await matcher.finish(
+                    f"{event.get_user_id()}的定时任务已存在，将在每天{fields[0]}时{fields[1]}分开始执行~"
+                )
             except AttributeError:
                 await matcher.finish("定时格式不正确，请删除定时任务后重新设置")
         else:
@@ -170,6 +172,7 @@ async def _(matcher: Matcher):
     msg_path = Path().joinpath("data/bilifan/config.yaml")
     msg_path.unlink()
     await matcher.finish("已删除全部定时刷牌子任务")
+
 
 @driver.on_bot_connect
 async def _():

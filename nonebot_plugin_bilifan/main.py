@@ -35,7 +35,9 @@ async def read_yaml(msg_path: Path):
         else:
             import yaml
 
-            with Path(msg_path / "users.yaml").open("r", encoding="utf-8") as f:  # noqa: ASYNC101
+            with Path(msg_path / "users.yaml").open(
+                "r", encoding="utf-8"
+            ) as f:  # noqa: ASYNC101
                 users = yaml.load(f, Loader=yaml.FullLoader)
         assert users["ASYNC"] in [0, 1], "ASYNC参数错误"
         assert users["LIKE_CD"] >= 0, "LIKE_CD参数错误"
