@@ -110,15 +110,21 @@ class BiliUser:
         async for medal in self.api.getFansMedalandRoomID():  # type: ignore
             if self.whiteList == [0]:
                 if medal["medal"]["target_id"] in self.bannedList:
-                    log.warning(f"{medal['anchor_info']['nick_name']} 在黑名单中，已过滤")
+                    log.warning(
+                        f"{medal['anchor_info']['nick_name']} 在黑名单中，已过滤"
+                    )
                     continue
                 self.medals.append(medal) if medal["room_info"]["room_id"] != 0 else ...
             else:
                 if medal["medal"]["target_id"] in self.whiteList:
-                    self.medals.append(medal) if medal["room_info"][
-                        "room_id"
-                    ] != 0 else ...
-                    log.success(f"{medal['anchor_info']['nick_name']} 在白名单中，加入任务")
+                    (
+                        self.medals.append(medal)
+                        if medal["room_info"]["room_id"] != 0
+                        else ...
+                    )
+                    log.success(
+                        f"{medal['anchor_info']['nick_name']} 在白名单中，加入任务"
+                    )
         [
             self.medalsNeedDo.append(medal)
             for medal in self.medals
@@ -142,12 +148,20 @@ class BiliUser:
                 log.info("同步点赞、分享任务开始....")
                 for index, medal in enumerate(failedMedals):
                     tasks = []
-                    tasks.append(
-                        self.api.likeInteract(medal["room_info"]["room_id"]),
-                    ) if self.config["LIKE_CD"] else ...
-                    tasks.append(
-                        self.api.shareRoom(medal["room_info"]["room_id"]),
-                    ) if self.config["SHARE_CD"] else ...
+                    (
+                        tasks.append(
+                            self.api.likeInteract(medal["room_info"]["room_id"]),
+                        )
+                        if self.config["LIKE_CD"]
+                        else ...
+                    )
+                    (
+                        tasks.append(
+                            self.api.shareRoom(medal["room_info"]["room_id"]),
+                        )
+                        if self.config["SHARE_CD"]
+                        else ...
+                    )
                     await asyncio.gather(*tasks)
                     log.success(
                         f"{medal['anchor_info']['nick_name']} 点赞,分享成功 {index+1}/{len(self.medalsNeedDo)}",
@@ -159,12 +173,20 @@ class BiliUser:
                 log.info("异步点赞、分享任务开始....")
                 allTasks = []
                 for medal in failedMedals:
-                    allTasks.append(
-                        self.api.likeInteract(medal["room_info"]["room_id"]),
-                    ) if self.config["LIKE_CD"] else ...
-                    allTasks.append(
-                        self.api.shareRoom(medal["room_info"]["room_id"]),
-                    ) if self.config["SHARE_CD"] else ...
+                    (
+                        allTasks.append(
+                            self.api.likeInteract(medal["room_info"]["room_id"]),
+                        )
+                        if self.config["LIKE_CD"]
+                        else ...
+                    )
+                    (
+                        allTasks.append(
+                            self.api.shareRoom(medal["room_info"]["room_id"]),
+                        )
+                        if self.config["SHARE_CD"]
+                        else ...
+                    )
                 await asyncio.gather(*allTasks)
             await asyncio.sleep(10)
             await self.getMedals()  # 刷新勋章
@@ -201,7 +223,9 @@ class BiliUser:
             if len(finallyMedals) / len(self.medalsNeedDo) <= 0.9:
                 log.warning("成功率过低,重新执行任务")
                 self.retryTimes += 1
-                log.warning("重试次数: {}/{}".format(self.retryTimes, self.maxRetryTimes))
+                log.warning(
+                    "重试次数: {}/{}".format(self.retryTimes, self.maxRetryTimes)
+                )
                 await self.asynclikeandShare(failedMedals)
         except Exception:
             log.exception("点赞、分享任务异常")
@@ -220,13 +244,17 @@ class BiliUser:
                 log.info("同步点赞任务开始....")
                 for index, medal in enumerate(failedMedals):
                     tasks = []
-                    tasks.append(
-                        self.api.likeInteractV3(
-                            medal["room_info"]["room_id"],
-                            medal["medal"]["target_id"],
-                            self.mid,
-                        ),
-                    ) if self.config["LIKE_CD"] else ...
+                    (
+                        tasks.append(
+                            self.api.likeInteractV3(
+                                medal["room_info"]["room_id"],
+                                medal["medal"]["target_id"],
+                                self.mid,
+                            ),
+                        )
+                        if self.config["LIKE_CD"]
+                        else ...
+                    )
                     await asyncio.gather(*tasks)
                     log.success(
                         f"{medal['anchor_info']['nick_name']} 点赞成功 {index+1}/{len(self.medalsNeedDo)}",
@@ -236,13 +264,17 @@ class BiliUser:
                 log.info("异步点赞任务开始....")
                 allTasks = []
                 for medal in failedMedals:
-                    allTasks.append(
-                        self.api.likeInteractV3(
-                            medal["room_info"]["room_id"],
-                            medal["medal"]["target_id"],
-                            self.mid,
-                        ),
-                    ) if self.config["LIKE_CD"] else ...
+                    (
+                        allTasks.append(
+                            self.api.likeInteractV3(
+                                medal["room_info"]["room_id"],
+                                medal["medal"]["target_id"],
+                                self.mid,
+                            ),
+                        )
+                        if self.config["LIKE_CD"]
+                        else ...
+                    )
                 await asyncio.gather(*allTasks)
             await asyncio.sleep(10)
             log.success("点赞任务完成")
@@ -275,9 +307,11 @@ class BiliUser:
         n = 0
         for medal in self.medals:
             try:
-                (await self.api.wearMedal(medal["medal"]["medal_id"])) if self.config[
-                    "WEARMEDAL"
-                ] else ...
+                (
+                    (await self.api.wearMedal(medal["medal"]["medal_id"]))
+                    if self.config["WEARMEDAL"]
+                    else ...
+                )
                 danmaku = await self.api.sendDanmaku(medal["room_info"]["room_id"])
                 n += 1
                 log.success(
@@ -289,16 +323,22 @@ class BiliUser:
                     ),
                 )
             except Exception as e:
-                log.error("{} 房间弹幕打卡失败: {}".format(medal["anchor_info"]["nick_name"], e))
+                log.error(
+                    "{} 房间弹幕打卡失败: {}".format(
+                        medal["anchor_info"]["nick_name"], e
+                    )
+                )
                 self.errmsg.append(
                     f"【{self.name}】 {medal['anchor_info']['nick_name']} 房间弹幕打卡失败: {e!s}",
                 )
             finally:
                 await asyncio.sleep(self.config["DANMAKU_CD"])
         if hasattr(self, "initialMedal"):
-            (await self.api.wearMedal(self.initialMedal["medal_id"])) if self.config[
-                "WEARMEDAL"
-            ] else ...
+            (
+                (await self.api.wearMedal(self.initialMedal["medal_id"]))
+                if self.config["WEARMEDAL"]
+                else ...
+            )
         log.success("弹幕打卡任务完成")
         self.message.append(f"【{self.name}】 弹幕打卡任务完成 {n}/{len(self.medals)}")
         if n >= 5:
