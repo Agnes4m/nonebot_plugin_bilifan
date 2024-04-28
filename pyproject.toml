@@ -43,11 +43,11 @@ target-version = ["py39", "py310", "py311"]
 include = '\.pyi?$'
 # skip-string-normalization = true
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 extra-standard-library = ["typing_extensions"]
 
 [tool.ruff]
-ignore = [
+lint.ignore = [
     "B008",
     "B905",
     "N803",
@@ -68,7 +68,7 @@ ignore = [
     "TRY002",
     "TRY003",
 ]
-select = [
+lint.select = [
     "A",
     "ARG",
     "ASYNC",
