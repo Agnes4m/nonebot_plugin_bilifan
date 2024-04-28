@@ -134,7 +134,7 @@ async def _(matcher: Matcher, event: Event):
             try:
                 fields = cron.split(" ")
                 await matcher.finish(
-                    f"{event.get_user_id()}的定时任务已存在，将在每天{fields[0]}时{fields[1]}分开始执行~"
+                    f"{event.get_user_id()}的定时任务已存在，将在每天{fields[0]}时{fields[1]}分开始执行~",
                 )
             except AttributeError:
                 await matcher.finish("定时格式不正确，请删除定时任务后重新设置")
