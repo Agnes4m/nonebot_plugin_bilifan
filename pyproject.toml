@@ -68,7 +68,7 @@ ignore = [
     "TRY002",
     "TRY003",
 ]
-lint.select = [
+select = [
     "A",
     "ARG",
     "ASYNC",
