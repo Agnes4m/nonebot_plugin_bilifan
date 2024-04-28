@@ -7,46 +7,46 @@ from io import BytesIO
 from pathlib import Path
 
 import aiohttp
-
-# import qrcode_terminal
+import anyio
 import qrcode
 import yaml
 from nonebot.log import logger
 
-# Cookies = cookiejar.CookieJar()
-# session = requests.Session()
-# session.cookies = Cookies
-
 csrf = ""
 access_key = ""
 base_path = Path().joinpath("data/bilifan")
-headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
-}
 
 
 async def is_login(session, cookies):
     api = "https://api.bilibili.com/x/web-interface/nav"
-
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36 Edg/97.0.1072.69",
+    }
     async with session.get(api, headers=headers, cookies=cookies) as resp:
         data = await resp.json()
         return data["code"] == 0, data["data"]["uname"]
 
 
 async def get_tv_qrcode_url_and_auth_code():
-    api = "https://passport.bilibili.com/x/passport-login/web/qrcode/generate"
+    api = "https://passport.bilibili.com/x/passport-tv-login/qrcode/auth_code"
     data = {
         "local_id": "0",
         "ts": str(int(time.time())),
     }
     await signature(data)
     async with aiohttp.ClientSession() as session:
-        async with session.get(
+        async with session.post(
             api,
             data=await map_to_string(data),
-            headers=headers,
-            # headers={"Content-Type": "application/x-www-form-urlencoded"},
+            cookies={},
+            headers={
+                "Host": "passport.bilibili.com",
+                "Content-Type": "application/x-www-form-urlencoded",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36 Edg/97.0.1072.69",
+            },
         ) as resp:
+            if resp.status != 200:
+                raise Exception("Failed to connect to server")
             resp_data = await resp.json()
             code = resp_data["code"]
             if code == 0:
@@ -57,48 +57,39 @@ async def get_tv_qrcode_url_and_auth_code():
 
 
 async def verify_login(login_key: str, data_path: Path):
-    api = "https://passport.bilibili.com/x/passport-login/web/qrcode/poll"
-    # data = {
-    #     "auth_code": api,
-    #     "local_id": "0",
-    #     "ts": str(int(time.time())),
-    # }
-    api += "?" + "qrcode_key=" + login_key
-    # await signature(data)
-    # data_string = await map_to_string(data)
+    api = "https://passport.bilibili.com/x/passport-tv-login/qrcode/poll"
+    data = {
+        "auth_code": login_key,
+        "local_id": "0",
+        "ts": str(int(time.time())),
+    }
+    await signature(data)
     while True:
         async with aiohttp.ClientSession() as session:
-            async with session.get(api, headers=headers) as resp:
+            async with session.post(
+                api,
+                data=await map_to_string(data),
+                cookies={},
+                headers={
+                    "Host": "passport.bilibili.com",
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36 Edg/97.0.1072.69",
+                },
+            ) as resp:
                 if resp.status != 200:
                     raise Exception("Failed to connect to server")
                 response_dict = await resp.json()
-                print("验证模式")
-                print(response_dict)
-                url = response_dict["data"]["url"]
-                access_key = response_dict["data"]["refresh_token"]
-                print(access_key)
-                cookie = {}
-                filename = "login_info.txt"
-                cookie_content = ""
+                code = response_dict["code"]
                 try:
-                    kv_arr = []
-                    for _, v in resp.headers["Set-Cookie"]:
-                        kv = v.split(";")[0].strip()
-                        kv_arr = kv.split("=")
-                    print(f"kr代码:{kv_arr}")
-                    cookie[kv_arr[0]] = kv_arr[1]
-                    filename: str = cookie["DedeUserID"] + "_cookie.txt"
-                    cookie_content = f"DedeUserID={cookie['DedeUserID']};DedeUserID__ckMd5={cookie['DedeUserID__ckMd5']};Expires={cookie['Expires']};SESSDATA={cookie['SESSDATA']};bili_jct={cookie['bili_jct']};"
-                    print(f"ck代码{cookie_content}")
-
+                    access_key = response_dict["data"]["access_token"]
                 except Exception:
-                    # access_key = ""
+                    access_key = ""
                     await asyncio.sleep(3)
 
-            if url != "":
+            if code == 0:
                 logger.success("登录成功")
+                filename = "login_info.txt"
                 data_path.mkdir(parents=True, exist_ok=True)
-                print(f"access_key代码{access_key}")
                 with (data_path / filename).open(mode="w", encoding="utf-8") as f:
                     f.write(access_key)
                 if not Path(data_path / "users.yaml").is_file():
@@ -107,11 +98,24 @@ async def verify_login(login_key: str, data_path: Path):
                         Path().joinpath("data/bilifan/users.yaml"),
                         data_path / "users.yaml",
                     )
-                with Path(data_path / "users.yaml").open("r", encoding="utf-8") as f:
-                    config = yaml.safe_load(f)
+                config = yaml.safe_load(
+                    await anyio.Path(data_path / "users.yaml").read_text("u8")
+                )
+                # with Path(data_path / "users.yaml").open(
+                #     "r", encoding="utf-8"
+                # ) as f:
+                #     config = yaml.safe_load(f)
+
                 config["USERS"][0]["access_key"] = access_key
-                with Path(data_path / "users.yaml").open("w", encoding="utf-8") as f:
-                    yaml.dump(config, f, allow_unicode=True, default_flow_style=False)
+                config = yaml.dump(
+                    await anyio.Path(data_path / "users.yaml").write_text("u8"),
+                    allow_unicode=True,
+                    default_flow_style=False,
+                )
+                # with Path(data_path / "users.yaml").open(
+                #     "w", encoding="utf-8"
+                # ) as f:  # noqa: ASYNC101
+                #     yaml.dump(config, f, allow_unicode=True, default_flow_style=False)
                 return "access_key已保存"
             await asyncio.sleep(3)
 

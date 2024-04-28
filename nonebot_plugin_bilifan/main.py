@@ -6,7 +6,6 @@ import warnings
 from pathlib import Path
 
 from nonebot.log import logger
-from nonebot.log import logger as log
 
 from .src import BiliUser
 
@@ -33,10 +32,18 @@ async def read_yaml(msg_path: Path):
         if os.environ.get("USERS"):
             users = json.loads(os.environ.get("USERS"))  # type: ignore
         else:
+            import anyio
             import yaml
 
-            with Path(msg_path / "users.yaml").open("r", encoding="utf-8") as f:
-                users = yaml.load(f, Loader=yaml.FullLoader)
+            users = yaml.load(
+                await anyio.Path(msg_path / "users.yaml").read_text("u8"),
+                Loader=yaml.FullLoader,
+            )
+            # with Path(msg_path / "users.yaml").open(
+            #     "r", encoding="utf-8",
+            # ) as f:
+            #     users = yaml.load(f, Loader=yaml.FullLoader)
+
         assert users["ASYNC"] in [0, 1], "ASYNC参数错误"
         assert users["LIKE_CD"] >= 0, "LIKE_CD参数错误"
         assert users["ASYNC"] in [0, 1], "ASYNC参数错误"
@@ -64,12 +71,12 @@ async def read_yaml(msg_path: Path):
             "SIGNINGROUP": users.get("SIGNINGROUP", 2),
         }
     except Exception as e:
-        log.error(f"读取配置文件失败,请检查配置文件格式是否正确: {e}")
+        logger.error(f"读取配置文件失败,请检查配置文件格式是否正确: {e}")
         exit(1)
     return users
 
 
-@log.catch
+@logger.catch
 async def mains(msg_path):
     await read_yaml(msg_path)
     init_tasks = []
@@ -100,7 +107,7 @@ async def mains(msg_path):
         await asyncio.gather(*init_tasks)
         await asyncio.gather(*start_tasks)
     except Exception as e:
-        log.exception(e)
+        logger.exception(e)
         message_list = [f"任务执行失败: {e}"]
     else:
         message_list = []
@@ -108,19 +115,19 @@ async def mains(msg_path):
     try:
         catch_msg_results = await asyncio.gather(*catch_msg)
     except Exception as e:
-        log.exception(e)
+        logger.exception(e)
         message_list.append(f"发送消息失败: {e}")
     else:
         message_list += list(itertools.chain.from_iterable(catch_msg_results))
 
-    [log.info(message) for message in message_list]
+    [logger.info(message) for message in message_list]
     return message_list
 
 
 def run(*args, **kwargs):  # noqa: ARG001
     loop = asyncio.new_event_loop()
     loop.run_until_complete(mains(Path().joinpath("data/bilifan")))
-    log.info("任务结束，等待下一次执行。")
+    logger.info("任务结束，等待下一次执行。")
 
 
 # if __name__ == '__main__':
@@ -134,7 +141,7 @@ def run(*args, **kwargs):  # noqa: ARG001
 #     from apscheduler.schedulers.blocking import BlockingScheduler
 #     from apscheduler.triggers.cron import CronTrigger
 
-#     log.info(f'使用内置定时器 {cron}，开启定时任务，等待时间到达后执行。')
+#     logger.info(f'使用内置定时器 {cron}，开启定时任务，等待时间到达后执行。')
 #     schedulers = BlockingScheduler()
 #     schedulers.add_job(run, CronTrigger.from_crontab(cron), misfire_grace_time=3600)
 #     schedulers.start()
@@ -142,7 +149,7 @@ def run(*args, **kwargs):  # noqa: ARG001
 #     from apscheduler.schedulers.blocking import BlockingScheduler
 #     from apscheduler.triggers.interval import IntervalTrigger
 #     import datetime
-#     log.info(f'使用内置定时器 {cron}，开启定时任务，等待时间到达后执行。')
+#     logger.info(f'使用内置定时器 {cron}，开启定时任务，等待时间到达后执行。')
 #     schedulers = BlockingScheduler()
 #     schedulers.add_job(run, CronTrigger.from_crontab(cron), misfire_grace_time=3600)
 #     schedulers.start()
@@ -151,7 +158,7 @@ def run(*args, **kwargs):  # noqa: ARG001
 #     from apscheduler.triggers.interval import IntervalTrigger
 #     import datetime
 
-#     log.info('使用自动守护模式，每隔 24 小时运行一次。')
+#     logger.info('使用自动守护模式，每隔 24 小时运行一次。')
 #     scheduler = BlockingScheduler(timezone='Asia/Shanghai')
 #     scheduler.add_job(
 #         run,
@@ -161,13 +168,13 @@ def run(*args, **kwargs):  # noqa: ARG001
 #     )
 #     scheduler.start()
 # else:
-#     log.info('未配置定时器，开启单次任务。')
+#     logger.info('未配置定时器，开启单次任务。')
 #     loop = asyncio.new_event_loop()
 #     asyncio.set_event_loop(loop)
 #     loop.run_until_complete(main())
-#     log.info("任务结束")
+#     logger.info("任务结束")
 
-#     log.info('使用自动守护模式，每隔 24 小时运行一次。')
+#     logger.info('使用自动守护模式，每隔 24 小时运行一次。')
 #     scheduler = BlockingScheduler(timezone='Asia/Shanghai')
 #     scheduler.add_job(
 #         run,
@@ -177,8 +184,8 @@ def run(*args, **kwargs):  # noqa: ARG001
 #     )
 #     scheduler.start()
 # else:
-#     log.info('未配置定时器，开启单次任务。')
+#     logger.info('未配置定时器，开启单次任务。')
 #     loop = asyncio.new_event_loop()
 #     asyncio.set_event_loop(loop)
 #     loop.run_until_complete(main())
-#     log.info("任务结束")
+#     logger.info("任务结束")

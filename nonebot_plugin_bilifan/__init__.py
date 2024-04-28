@@ -24,9 +24,11 @@ require("nonebot_plugin_saa")
 from nonebot_plugin_saa import Image, MessageFactory  # noqa: E402
 
 logger.opt(colors=True).info(
-    "已检测到软依赖<y>nonebot_plugin_apscheduler</y>, <g>开启定时任务功能</g>"
-    if scheduler
-    else "未检测到软依赖<y>nonebot_plugin_apscheduler</y>，<r>禁用定时任务功能</r>",
+    (
+        "已检测到软依赖<y>nonebot_plugin_apscheduler</y>, <g>开启定时任务功能</g>"
+        if scheduler
+        else "未检测到软依赖<y>nonebot_plugin_apscheduler</y>，<r>禁用定时任务功能</r>"
+    ),
 )
 
 
@@ -48,22 +50,34 @@ __plugin_meta__ = PluginMetadata(
 login_in = on_command("blogin", aliases={"b站登录"}, block=False)
 login_del = on_command("blogin_del", aliases={"删除登录信息"}, block=False)
 fan_once = on_command("bfan", aliases={"开始刷牌子", "开始粉丝牌"}, block=False)
-fan_auto = on_command("addfan", aliases={"自动刷牌子", "自动粉丝牌"}, priority=40, block=False)
+fan_auto = on_command(
+    "addfan",
+    aliases={"自动刷牌子", "自动粉丝牌"},
+    priority=40,
+    block=False,
+)
 del_only = on_command("bdel", aliases={"取消自动刷牌子", "取消自动粉丝牌"}, block=False)
-del_all = on_command("bdel_all", aliases={"删除全部定时任务"}, block=False, permission=SUPERUSER)
+del_all = on_command(
+    "bdel_all",
+    aliases={"删除全部定时任务"},
+    block=False,
+    permission=SUPERUSER,
+)
 
 
 @login_in.handle()
 async def _(matcher: Matcher, event: Event):
     try:
         login_url, auth_code = await get_tv_qrcode_url_and_auth_code()
-    except Exception:
-        # print(e)
+    except Exception as e:
+        print(e)
         await matcher.finish("已超时，请稍后重试！")
     data_path = Path().joinpath(f"data/bilifan/{event.get_user_id()}")
     data_path.mkdir(parents=True, exist_ok=True)
     data = await draw_QR(login_url)
-    forward_msg: list = ["本功能会调用并保存b站登录信息的cookie,请确保你在信任本机器人主人的情况下登录,如果出现财产损失,本作者对此不负责任"]
+    forward_msg: list = [
+        "本功能会调用并保存b站登录信息的cookie,请确保你在信任本机器人主人的情况下登录,如果出现财产损失,本作者对此不负责任",
+    ]
     forward_msg.append(Image(data))
     try:
         # if isinstance(event, GroupEvent):
@@ -72,7 +86,7 @@ async def _(matcher: Matcher, event: Event):
         #     )
         # else:
         await MessageFactory(forward_msg).send()
-		await matcher.send("或将此链接复制到手机B站打开:" + login_url)
+        await matcher.send("或将此链接复制到手机B站打开:" + login_url)
     except Exception:
         logger.warning("二维码可能被风控，发送链接")
         await matcher.send("将此链接复制到手机B站打开:" + login_url)
@@ -114,7 +128,7 @@ async def _(matcher: Matcher, event: Event):
         else:
             logger.info(msg_path)
             await matcher.finish("你尚未登录，请输入【b站登录】")
-        messageList:List[str] = await mains(msg_path.parent)
+        messageList: List[str] = await mains(msg_path.parent)
         message_str = "\n".join(messageList)
         await matcher.finish(message_str)
     except (FileNotFoundError, SystemExit):
@@ -129,13 +143,15 @@ async def _(matcher: Matcher, event: Event):
     msg_path = Path().joinpath(f"data/bilifan/{event.get_user_id()}/login_info.txt")
     if msg_path.is_file():
         if event.get_user_id() in config:
-            users = await read_yaml(Path().joinpath('data/bilifan'))
-            cron = users.get('CRON', None)
+            users = await read_yaml(Path().joinpath("data/bilifan"))
+            cron = users.get("CRON", None)
             try:
                 fields = cron.split(" ")
-                await matcher.finish(f"{event.get_user_id()}的定时任务已存在，将在每天{fields[0]}时{fields[1]}分开始执行~")
+                await matcher.finish(
+                    f"{event.get_user_id()}的定时任务已存在，将在每天{fields[0]}时{fields[1]}分开始执行~",
+                )
             except AttributeError:
-                await matcher.finish('定时格式不正确，请删除定时任务后重新设置')
+                await matcher.finish("定时格式不正确，请删除定时任务后重新设置")
         else:
             config[event.get_user_id()] = group_id
             save_config(config)
@@ -171,6 +187,7 @@ async def _(matcher: Matcher):
     msg_path.unlink()
     await matcher.finish("已删除全部定时刷牌子任务")
 
+
 @driver.on_bot_connect
 async def _():
     users = await read_yaml(Path().joinpath("data/bilifan"))
@@ -184,7 +201,7 @@ async def _():
         logger.error("定时格式不正确，不启用定时功能")
         return
     try:
-        logger.info(f'定时任务已配置，将在每天{fields[0]}时{fields[1]}分后自动执行~')
+        logger.info(f"定时任务已配置，将在每天{fields[0]}时{fields[1]}分后自动执行~")
         scheduler.add_job(
             auto_cup,
             "cron",

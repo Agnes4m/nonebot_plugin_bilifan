@@ -41,7 +41,7 @@ def save_config(data):
 
 async def auto_cup():
     config = load_config()
-    count = {}
+    count: dict = {}
     tasks = []
 
     for user_id, group_id in config.items():  # noqa: B007
@@ -58,7 +58,7 @@ async def auto_cup():
         messageList.append((user_id, group_id, message))
 
     for user_id, group_id, message in messageList:
-        messageStr = "".join(message)
+        messageStr = "\n".join(message)
         logger.info(f"{user_id}用户自动刷牌子任务执行完成，{messageStr}")
         if group_id.startswith("group"):
             group_num = group_id.split("_")[1]
@@ -66,14 +66,19 @@ async def auto_cup():
                 count[group_num] += 1
             else:
                 count[group_num] = 1
+        elif user_id != group_id:
+            if group_id in count:
+                count[group_id] += 1
+            else:
+                count[group_id] = 1
         await get_bot().send_private_msg(user_id=user_id, message=messageStr)
 
     for group_num, num in count.items():
         logger.info(f"{group_num}群组自动刷牌子任务执行完成，共{num}个")
-            await get_bot().send_group_msg(
+        await get_bot().send_group_msg(
             group_id=group_num,
             message=f"本群今日已完成{num}个自动刷牌子任务",
-            )
+        )
 
 
 def render_forward_msg(msg_list: list, uid=2711142767, name="宁宁"):

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_bilifan"
-version = "0.3.2"
+version = "0.3.3"
 description = "刷站粉丝牌子的机器人插件"
 authors = ["Agnes_Digital <Z735803792@163.com>"]
 license = "GPLv3"
@@ -39,14 +39,22 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 89
-target-version = ["py39", "py310", "py311"]
+target-version = ["py39", "py310", "py311","py312"]
 include = '\.pyi?$'
 # skip-string-normalization = true
 
-[tool.ruff.isort]
-extra-standard-library = ["typing_extensions"]
+[tool.ruff.format]
+docstring-code-format = true
+line-ending = "lf"
 
-[tool.ruff]
+[tool.ruff.lint.isort]
+combine-as-imports = true
+detect-same-package = true
+extra-standard-library = ["typing_extensions"]
+split-on-trailing-comma = true
+
+[tool.ruff.lint]
+preview = true
 ignore = [
     "B008",
     "B905",
