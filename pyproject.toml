@@ -43,55 +43,107 @@ target-version = ["py39", "py310", "py311"]
 include = '\.pyi?$'
 # skip-string-normalization = true
 
-[tool.ruff.lint.isort]
-extra-standard-library = ["typing_extensions"]
-
 [tool.ruff]
+extend-exclude = [
+    "./packages/nonebot-plugin-rimofun/nonebot_plugin_rimofun/bnhhsh",
+    "./packages/nonebot-plugin-rimofun/nonebot_plugin_rimofun/not_translator",
+    "./packages/nb-cli-plugin-bootstrap/nb_cli_plugin_bootstrap/templates/bootstrap",
+]
+
+[tool.ruff.format]
+docstring-code-format = true
+line-ending = "lf"
+
+[tool.ruff.lint]
+preview = true
 ignore = [
     "B008",
     "B905",
-    "N803",
-    "E402",
-    "F601",
+    # "COM812",
     "E501",
-    "N806",
-    "N802",
+    "FBT001",
     "FBT002",
+    "ISC001",
+    "PERF203",
     "PGH003",
+    "PLC04",
     "RUF001",
     "RUF002",
     "RUF003",
     "RUF006",
     "RUF100",
+    "S101",
+    "S311",
+    "S404",
     "SIM117",
-    "TRY201",
     "TRY002",
     "TRY003",
 ]
 select = [
     "A",
+    "ANN001",
     "ARG",
     "ASYNC",
     "B",
     "C4",
     "COM",
+    "DTZ",
     "E",
     "F",
     "FBT",
     "FLY",
+    "FURB",
     "I",
     "ISC",
     "N",
+    "NPY",
+    "PERF",
     "PIE",
     "PGH",
+    # "PL",
+    "PT",
     "PTH",
     "PYI",
     "Q",
     "RET",
     "RSE",
     "RUF",
+    "S",
     "SIM",
     "SLF",
     "SLOT",
+    "TCH",
     "TRY",
+    "YTT",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"private/nonebot-plugin-send-anything-anywhere/*.py" = [
+    "I001",
+    "A001",
+    "A002",
+    "A003",
+    "N818",
+    "ARG001",
+    "ARG004",
+    "SLF001",
+]
+"private/adapter-telegram/*.py" = [
+    "I001",
+    "A001",
+    "A002",
+    "A003",
+    "B010",
+    "N818",
+    "ARG001",
+    "ARG004",
+    "COM812",
+    "SLF001",
+    "COM812",
+]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+detect-same-package = true
+extra-standard-library = ["typing_extensions"]
+split-on-trailing-comma = true
