@@ -35,12 +35,16 @@ async def read_yaml(msg_path: Path):
         else:
             import anyio
             import yaml
-            users = yaml.load(await anyio.Path(msg_path / "users.yaml").read_text("u8"), Loader=yaml.FullLoader)
+
+            users = yaml.load(
+                await anyio.Path(msg_path / "users.yaml").read_text("u8"),
+                Loader=yaml.FullLoader,
+            )
             # with Path(msg_path / "users.yaml").open(
             #     "r", encoding="utf-8",
             # ) as f:
             #     users = yaml.load(f, Loader=yaml.FullLoader)
-            
+
         assert users["ASYNC"] in [0, 1], "ASYNC参数错误"
         assert users["LIKE_CD"] >= 0, "LIKE_CD参数错误"
         assert users["ASYNC"] in [0, 1], "ASYNC参数错误"
