@@ -47,7 +47,7 @@ include = '\.pyi?$'
 extra-standard-library = ["typing_extensions"]
 
 [tool.ruff]
-lint.ignore = [
+ignore = [
     "B008",
     "B905",
     "N803",
