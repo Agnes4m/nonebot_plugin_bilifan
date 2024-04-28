@@ -150,7 +150,7 @@ class BiliUser:
                     ) if self.config["SHARE_CD"] else ...
                     await asyncio.gather(*tasks)
                     log.success(
-                        f"{medal['anchor_info']['nick_name']} 点赞,分享成功 {index+1}/{len(self.medalsNeedDo)}",
+                        f"{medal['anchor_info']['nick_name']} 点赞,分享成功 {index + 1}/{len(self.medalsNeedDo)}",
                     )
                     await asyncio.sleep(
                         max(self.config["LIKE_CD"], self.config["SHARE_CD"]),
@@ -229,7 +229,7 @@ class BiliUser:
                     ) if self.config["LIKE_CD"] else ...
                     await asyncio.gather(*tasks)
                     log.success(
-                        f"{medal['anchor_info']['nick_name']} 点赞成功 {index+1}/{len(self.medalsNeedDo)}",
+                        f"{medal['anchor_info']['nick_name']} 点赞成功 {index + 1}/{len(self.medalsNeedDo)}",
                     )
                     await asyncio.sleep(self.config["LIKE_CD"])
             else:

@@ -51,11 +51,17 @@ login_in = on_command("blogin", aliases={"b站登录"}, block=False)
 login_del = on_command("blogin_del", aliases={"删除登录信息"}, block=False)
 fan_once = on_command("bfan", aliases={"开始刷牌子", "开始粉丝牌"}, block=False)
 fan_auto = on_command(
-    "addfan", aliases={"自动刷牌子", "自动粉丝牌"}, priority=40, block=False
+    "addfan",
+    aliases={"自动刷牌子", "自动粉丝牌"},
+    priority=40,
+    block=False,
 )
 del_only = on_command("bdel", aliases={"取消自动刷牌子", "取消自动粉丝牌"}, block=False)
 del_all = on_command(
-    "bdel_all", aliases={"删除全部定时任务"}, block=False, permission=SUPERUSER
+    "bdel_all",
+    aliases={"删除全部定时任务"},
+    block=False,
+    permission=SUPERUSER,
 )
 
 
@@ -70,7 +76,7 @@ async def _(matcher: Matcher, event: Event):
     data_path.mkdir(parents=True, exist_ok=True)
     data = await draw_QR(login_url)
     forward_msg: list = [
-        "本功能会调用并保存b站登录信息的cookie,请确保你在信任本机器人主人的情况下登录,如果出现财产损失,本作者对此不负责任"
+        "本功能会调用并保存b站登录信息的cookie,请确保你在信任本机器人主人的情况下登录,如果出现财产损失,本作者对此不负责任",
     ]
     forward_msg.append(Image(data))
     try:
