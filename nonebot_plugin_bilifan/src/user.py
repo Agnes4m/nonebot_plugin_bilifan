@@ -111,7 +111,7 @@ class BiliUser:
             if self.whiteList == [0]:
                 if medal["medal"]["target_id"] in self.bannedList:
                     log.warning(
-                        f"{medal['anchor_info']['nick_name']} 在黑名单中，已过滤"
+                        f"{medal['anchor_info']['nick_name']} 在黑名单中，已过滤",
                     )
                     continue
                 self.medals.append(medal) if medal["room_info"]["room_id"] != 0 else ...
@@ -123,7 +123,7 @@ class BiliUser:
                         else ...
                     )
                     log.success(
-                        f"{medal['anchor_info']['nick_name']} 在白名单中，加入任务"
+                        f"{medal['anchor_info']['nick_name']} 在白名单中，加入任务",
                     )
         [
             self.medalsNeedDo.append(medal)
@@ -224,7 +224,7 @@ class BiliUser:
                 log.warning("成功率过低,重新执行任务")
                 self.retryTimes += 1
                 log.warning(
-                    "重试次数: {}/{}".format(self.retryTimes, self.maxRetryTimes)
+                    "重试次数: {}/{}".format(self.retryTimes, self.maxRetryTimes),
                 )
                 await self.asynclikeandShare(failedMedals)
         except Exception:
@@ -325,8 +325,9 @@ class BiliUser:
             except Exception as e:
                 log.error(
                     "{} 房间弹幕打卡失败: {}".format(
-                        medal["anchor_info"]["nick_name"], e
-                    )
+                        medal["anchor_info"]["nick_name"],
+                        e,
+                    ),
                 )
                 self.errmsg.append(
                     f"【{self.name}】 {medal['anchor_info']['nick_name']} 房间弹幕打卡失败: {e!s}",

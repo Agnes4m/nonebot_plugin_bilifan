@@ -27,6 +27,10 @@ _✨自动b站粉丝牌✨_
     <img src="https://img.shields.io/badge/nonebot-2.0.0-red.svg" alt="NoneBot">
 </div>
 
+## 最新说明
+
+- 已经可以正常使用和登录了，只是输出log暂时有问题
+
 ## 配置说明
 
 启动一次插件，在bot路径下，"data/bilifan"文件夹内，按需求修改"users.yaml"文件

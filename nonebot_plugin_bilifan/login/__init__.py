@@ -51,7 +51,7 @@ async def get_tv_qrcode_url_and_auth_code():
             code = resp_data["code"]
             if code == 0:
                 login_url = resp_data["data"]["url"]
-                login_key = resp_data["data"]["qrcode_key"]
+                login_key = resp_data["data"]["auth_code"]
                 return login_url, login_key
             raise Exception("get_tv_qrcode_url_and_auth_code error")
 
@@ -99,7 +99,7 @@ async def verify_login(login_key: str, data_path: Path):
                         data_path / "users.yaml",
                     )
                 config = yaml.safe_load(
-                    await anyio.Path(data_path / "users.yaml").read_text("u8")
+                    await anyio.Path(data_path / "users.yaml").read_text("u8"),
                 )
                 # with Path(data_path / "users.yaml").open(
                 #     "r", encoding="utf-8"
@@ -107,11 +107,13 @@ async def verify_login(login_key: str, data_path: Path):
                 #     config = yaml.safe_load(f)
 
                 config["USERS"][0]["access_key"] = access_key
-                config = yaml.dump(
-                    await anyio.Path(data_path / "users.yaml").write_text("u8"),
+                yaml_string = yaml.dump(
+                    config,
                     allow_unicode=True,
                     default_flow_style=False,
                 )
+                await anyio.Path(data_path / "users.yaml").write_text(yaml_string, "u8")
+
                 # with Path(data_path / "users.yaml").open(
                 #     "w", encoding="utf-8"
                 # ) as f:  # noqa: ASYNC101
@@ -124,7 +126,7 @@ appkey = "4409e2ce8ffd12b8"
 appsec = "59b43e04ad6965f34319062b478f83dd"
 
 
-async def signature(params: dict):
+async def signature(params: dict):  # noqa: RUF029
     keys = list(params.keys())
     params["appkey"] = appkey
     keys.append("appkey")
@@ -135,11 +137,11 @@ async def signature(params: dict):
     params["sign"] = hash_.hexdigest()
 
 
-async def map_to_string(params: dict) -> str:
+async def map_to_string(params: dict) -> str:  # noqa: RUF029
     return "&".join([k + "=" + v for k, v in params.items()])
 
 
-async def draw_QR(login_url: str):  # noqa: N802
+async def draw_QR(login_url: str):  # noqa: N802, RUF029
     "绘制二维码"
     qr = qrcode.QRCode(version=1, box_size=10, border=4)  # type: ignore
     qr.add_data(login_url)
