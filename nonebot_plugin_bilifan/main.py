@@ -19,7 +19,6 @@ warnings.filterwarnings(
 # os.chdir(os.path.dirname(os.path.abspath(__file__)).split(__file__)[0])
 
 base_path = Path().joinpath("data/bilifan")
-base_path = Path().joinpath("data/bilifan")
 base_path.mkdir(parents=True, exist_ok=True)
 logger.info(base_path)
 
