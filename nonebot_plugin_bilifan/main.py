@@ -46,25 +46,14 @@ async def read_yaml(msg_path: Path):
 
         assert users["ASYNC"] in [0, 1], "ASYNC参数错误"
         assert users["LIKE_CD"] >= 0, "LIKE_CD参数错误"
-        assert users["ASYNC"] in [0, 1], "ASYNC参数错误"
-        assert users["LIKE_CD"] >= 0, "LIKE_CD参数错误"
         # assert users['SHARE_CD'] >= 0, "SHARE_CD参数错误"
-        assert users["DANMAKU_CD"] >= 0, "DANMAKU_CD参数错误"
-        assert users["WATCHINGLIVE"] >= 0, "WATCHINGLIVE参数错误"
-        assert users["WEARMEDAL"] in [0, 1], "WEARMEDAL参数错误"
         assert users["DANMAKU_CD"] >= 0, "DANMAKU_CD参数错误"
         assert users["WATCHINGLIVE"] >= 0, "WATCHINGLIVE参数错误"
         assert users["WEARMEDAL"] in [0, 1], "WEARMEDAL参数错误"
         config = {
             "ASYNC": users["ASYNC"],
             "LIKE_CD": users["LIKE_CD"],
-            "ASYNC": users["ASYNC"],
-            "LIKE_CD": users["LIKE_CD"],
             # "SHARE_CD": users['SHARE_CD'],
-            "DANMAKU_CD": users["DANMAKU_CD"],
-            "WATCHINGLIVE": users["WATCHINGLIVE"],
-            "WEARMEDAL": users["WEARMEDAL"],
-            "SIGNINGROUP": users.get("SIGNINGROUP", 2),
             "DANMAKU_CD": users["DANMAKU_CD"],
             "WATCHINGLIVE": users["WATCHINGLIVE"],
             "WEARMEDAL": users["WEARMEDAL"],
@@ -83,14 +72,6 @@ async def mains(msg_path):
     start_tasks = []
     catch_msg = []
 
-    for user in users["USERS"]:
-        if user["access_key"]:
-            bili_user = BiliUser(
-                user["access_key"],
-                user.get("white_uid", ""),
-                user.get("banned_uid", ""),
-                config,
-            )
     for user in users["USERS"]:
         if user["access_key"]:
             bili_user = BiliUser(
