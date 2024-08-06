@@ -57,7 +57,7 @@ def retry(tries=3, interval=1):
                     result = await func(*args, **kwargs)
                 except Exception as E:
                     count += 1
-                    if type(E) == BiliApiError:
+                    if type(E) == BiliApiError:  # noqa: E721
                         if E.code == 1011040:
                             raise E  # noqa: TRY201
                         if E.code == 10030:

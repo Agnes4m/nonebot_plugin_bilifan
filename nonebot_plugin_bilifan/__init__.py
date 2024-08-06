@@ -20,8 +20,8 @@ try:
     from nonebot_plugin_apscheduler import scheduler
 except BaseException:
     scheduler = None
-require("nonebot_plugin_saa")
-from nonebot_plugin_saa import Image, MessageFactory  # noqa: E402
+require("nonebot_plugin_alconna")
+from nonebot_plugin_alconna import UniMessage  # noqa: E402
 
 logger.opt(colors=True).info(
     (
@@ -33,14 +33,14 @@ logger.opt(colors=True).info(
 
 
 driver = get_driver()
-__version__ = "0.3.4"
+__version__ = "0.4.0"
 __plugin_meta__ = PluginMetadata(
     name="bilifan",
     description="b站粉丝牌~",
     usage="发送 开始刷牌子 即可",
     type="application",
     homepage="https://github.com/Agnes4m/nonebot_plugin_bilifan",
-    supported_adapters=inherit_supported_adapters("nonebot_plugin_saa"),
+    supported_adapters=inherit_supported_adapters("nonebot_plugin_alconna"),
     extra={
         "version": __version__,
         "author": "Agnes4m <Z735803792@163.com>",
@@ -75,18 +75,15 @@ async def _(matcher: Matcher, event: Event):
     data_path = Path().joinpath(f"data/bilifan/{event.get_user_id()}")
     data_path.mkdir(parents=True, exist_ok=True)
     data = await draw_QR(login_url)
-    forward_msg: list = [
-        "本功能会调用并保存b站登录信息的cookie,请确保你在信任本机器人主人的情况下登录,如果出现财产损失,本作者对此不负责任",
-    ]
-    forward_msg.append(Image(data))
+    forward_msg = "本功能会调用并保存b站登录信息的cookie,请确保你在信任本机器人主人的情况下登录,如果出现财产损失,本作者对此不负责任"
     try:
         # if isinstance(event, GroupEvent):
         #     await bot.call_api(
         #         "send_group_forward_msg", group_id=event.group_id, messages=forward_msg
         #     )
         # else:
-        await MessageFactory(forward_msg).send()
-        await matcher.send("或将此链接复制到手机B站打开:" + login_url)
+        await UniMessage.text(forward_msg).send()
+        await UniMessage.image(raw=data).send()
     except Exception:
         logger.warning("二维码可能被风控，发送链接")
         await matcher.send("将此链接复制到手机B站打开:" + login_url)
@@ -123,8 +120,8 @@ async def _(matcher: Matcher, event: Event):
         if msg_path.is_file():
             logger.info(msg_path)
             users = await read_yaml(Path().joinpath("data/bilifan"))
-            watchinglive = users.get("WATCHINGLIVE", None)
-            await matcher.send(f"开始执行，预计将在{watchinglive}分钟后完成~")
+            watchinglive: int = users.get("WATCHINGLIVE", None)
+            await matcher.send(f"开始执行，预计将在粉丝牌数量*{watchinglive}分钟后完成~")
         else:
             logger.info(msg_path)
             await matcher.finish("你尚未登录，请输入【b站登录】")

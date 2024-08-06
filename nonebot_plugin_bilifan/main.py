@@ -57,6 +57,7 @@ async def read_yaml(msg_path: Path):
             "WATCHINGLIVE": users["WATCHINGLIVE"],
             "WEARMEDAL": users["WEARMEDAL"],
             "SIGNINGROUP": users.get("SIGNINGROUP", 2),
+            "LEVEN": users.get("LEVEN", 20),
         }
     except Exception as e:
         logger.error(f"读取配置文件失败,请检查配置文件格式是否正确: {e}")
