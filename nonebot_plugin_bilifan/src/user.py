@@ -6,17 +6,6 @@ from aiohttp import ClientSession, ClientTimeout
 from loguru import logger
 from nonebot.log import logger as log
 
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-# logger.remove()
-# logger.add(
-# sys.stdout,
-# colorize=True,
-# format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> <blue> {extra[user]} </blue> <level>{message}</level>",
-# backtrace=True,
-# diagnose=True,
-# )
-
 global user
 
 
@@ -330,24 +319,39 @@ class BiliUser:
             log.info("每日观看不直播任务关闭")
             return
         HEART_MAX = self.config["WATCHINGLIVE"]
-        log.info(f"每日{HEART_MAX}分钟任务开始")
-        n = 0
-        for medal in self.medalsNeedDo:
-            n += 1
-            for heartNum in range(1, HEART_MAX + 1):
-                tasks = []
-                tasks.append(
-                    self.api.heartbeat(
-                        medal["room_info"]["room_id"], medal["medal"]["target_id"]
+        if self.config["WHACHASYNER"]:
+            log.info(f"每日{HEART_MAX}分钟任务开始")
+            n = 0
+            for medal in self.medalsNeedDo:
+                n += 1
+                for heartNum in range(1, HEART_MAX + 1):
+                    tasks = []
+                    tasks.append(
+                        self.api.heartbeat(
+                            medal["room_info"]["room_id"], medal["medal"]["target_id"]
+                        )
                     )
-                )
-                await asyncio.gather(*tasks)
-                if heartNum % 5 == 0:
-                    log.info(
-                        f"{medal['anchor_info']['nick_name']} 第{heartNum}次心跳包已发送（{n}/{len(self.medalsNeedDo)}）"
-                    )
-            await asyncio.sleep(60)
-        log.success(f"每日{HEART_MAX}分钟任务完成")
+                    await asyncio.gather(*tasks)
+                    if heartNum % 5 == 0:
+                        log.info(
+                            f"{medal['anchor_info']['nick_name']} 第{heartNum}次心跳包已发送（{n}/{len(self.medalsNeedDo)}）"
+                        )
+                await asyncio.sleep(60)
+            log.success(f"每日{HEART_MAX}分钟任务完成")
+        # else:
+        #     log.info(f"每日{HEART_MAX}分钟任务开始")
+        #     for medal in self.medalsNeedDo:
+        #         n += 1
+        #         for heartNum in range(1, HEART_MAX + 1):
+        #             tasks = self.api.heartbeat(
+        #                     medal["room_info"]["room_id"], medal["medal"]["target_id"]
+        #                 )
+        #             if heartNum % 5 == 0:
+        #                 log.info(
+        #                     f"{medal['anchor_info']['nick_name']} 第{heartNum}次心跳包已发送（{n}/{len(self.medalsNeedDo)}）"
+        #                 )
+        #         await asyncio.sleep(60)
+        #     log.success(f"每日{HEART_MAX}分钟任务完成")
 
     async def signInGroups(self):
         if not self.config["SIGNINGROUP"]:

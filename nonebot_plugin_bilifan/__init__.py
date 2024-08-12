@@ -33,7 +33,7 @@ logger.opt(colors=True).info(
 
 
 driver = get_driver()
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 __plugin_meta__ = PluginMetadata(
     name="bilifan",
     description="b站粉丝牌~",

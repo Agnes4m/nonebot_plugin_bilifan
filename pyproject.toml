@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_bilifan"
-version = "0.4.0"
+version = "0.4.1"
 description = "刷站粉丝牌子的机器人插件"
 authors = ["Agnes_Digital <Z735803792@163.com>"]
 license = "GPLv3"
@@ -31,6 +31,7 @@ pillow = ">=9.5.0"
 aiohttp-socks = "^0.8.0"
 pyyaml = "^6.0"
 qrcode = "^7.4.2"
+anyio = ">=3.6.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -39,7 +40,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 89
-target-version = ["py39", "py310", "py311","py312"]
+target-version = ["py39", "py310", "py311"]
 include = '\.pyi?$'
 # skip-string-normalization = true
 

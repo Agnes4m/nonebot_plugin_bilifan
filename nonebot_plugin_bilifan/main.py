@@ -16,7 +16,6 @@ warnings.filterwarnings(
     "ignore",
     message="The localize method is no longer necessary, as this time zone supports the fold attribute",
 )
-# os.chdir(os.path.dirname(os.path.abspath(__file__)).split(__file__)[0])
 
 base_path = Path().joinpath("data/bilifan")
 base_path.mkdir(parents=True, exist_ok=True)
@@ -58,6 +57,7 @@ async def read_yaml(msg_path: Path):
             "WEARMEDAL": users["WEARMEDAL"],
             "SIGNINGROUP": users.get("SIGNINGROUP", 2),
             "LEVEN": users.get("LEVEN", 20),
+            "WHACHASYNER": users.get("WHACHASYNER", 1),
         }
     except Exception as e:
         logger.error(f"读取配置文件失败,请检查配置文件格式是否正确: {e}")
