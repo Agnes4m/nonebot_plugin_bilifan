@@ -31,6 +31,7 @@ class BiliUser:
             ]  # 黑名单
         except ValueError:
             raise ValueError("白名单或黑名单格式错误")  # noqa: B904
+
         self.config = config
         self.medals = []  # 用户所有勋章
         self.medalsNeedDo = []  # 用户所有勋章，等级小于20的 未满1500的
