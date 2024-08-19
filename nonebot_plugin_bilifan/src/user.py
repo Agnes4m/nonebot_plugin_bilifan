@@ -331,17 +331,21 @@ class BiliUser:
             heartNum = 0
             while True:
                 tasks = []
-            for medal in self.medalsNeedDo:
-                    tasks.append(self.api.heartbeat(medal['room_info']['room_id'], medal['medal']['target_id']))
-                await asyncio.gather(*tasks)
-                heartNum += 1
-                log.info(
-                    f"{' '.join([medal['anchor_info']['nick_name'] for medal in self.medalsNeedDo[:5]])} 等共 {len(self.medalsNeedDo)} 个房间的第{heartNum}次心跳包已发送（{heartNum}/{HEART_MAX}）",
-                )
-                await asyncio.sleep(60)
-                if heartNum >= HEART_MAX:
-                    break
-            log.success(f"每日{HEART_MAX}分钟任务完成")
+                for medal in self.medalsNeedDo:
+                    tasks.append(
+                        self.api.heartbeat(
+                            medal["room_info"]["room_id"], medal["medal"]["target_id"]
+                        )
+                    )
+                    await asyncio.gather(*tasks)
+                    heartNum += 1
+                    log.info(
+                        f"{' '.join([medal['anchor_info']['nick_name'] for medal in self.medalsNeedDo[:5]])} 等共 {len(self.medalsNeedDo)} 个房间的第{heartNum}次心跳包已发送（{heartNum}/{HEART_MAX}）",
+                    )
+                    await asyncio.sleep(60)
+                    if heartNum >= HEART_MAX:
+                        break
+                log.success(f"每日{HEART_MAX}分钟任务完成")
         else:
             log.info(f"每日{HEART_MAX}分钟任务开始")
             medalsNeedDoList = list(self.medalsNeedDo)
