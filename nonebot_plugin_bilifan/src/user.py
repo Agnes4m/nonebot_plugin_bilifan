@@ -122,6 +122,7 @@ class BiliUser:
     async def like_v3(self, failedMedals: list = []):  # noqa: B006
         if self.config["LIKE_CD"] == 0:
             log.info("点赞任务已关闭")
+            return
         try:
             if not failedMedals:
                 failedMedals = self.medals
@@ -172,15 +173,19 @@ class BiliUser:
 
             await asyncio.sleep(10)
             log.success("点赞任务完成")
-            # finallyMedals = [medal for medal in self.medalsNeedDo if medal['medal']['today_feed'] >= 50]
-            # msg = "20级以下牌子共 {} 个,完成任务 {} 个亲密度大于等于200".format(
-            #     len(self.medalsNeedDo),
+            # finallyMedals = [
+            #     medal
+            #     for medal in self.medals
+            #     if medal["medal"]["today_feed"] >= 100
+            # ]
+            # msg = "20级以下牌子共 {} 个,完成点赞任务 {} 个".format(
+            #     len(self.medals),
             #     len(finallyMedals),
             # )
             # log.info(msg)
         except Exception:
-            log.exception("点赞、分享任务异常")
-            self.errmsg.append(f"【{self.name}】 点赞、分享任务异常,请检查日志")
+            log.exception("点赞任务异常")
+            self.errmsg.append(f"【{self.name}】 点赞任务异常,请检查日志")
 
     async def sendDanmaku(self):
         """
@@ -269,17 +274,17 @@ class BiliUser:
             nick_name = medal["anchor_info"]["nick_name"]
             if today_feed >= 1500:
                 nameList1.append(nick_name)
-            elif 1300 < today_feed <= 1400:
+            elif 1200 < today_feed <= 1500:
                 nameList2.append(nick_name)
-            elif 1200 < today_feed <= 1300:
+            elif 300 < today_feed <= 1200:
                 nameList3.append(nick_name)
-            elif today_feed <= 1200:
+            elif today_feed <= 300:
                 nameList4.append(nick_name)
         self.message.append(f"【{self.name}】 今日亲密度获取情况如下（20级以下）：")
 
         for l, n in zip(  # noqa: E741
             [nameList1, nameList2, nameList3, nameList4],
-            ["【1500】", "【1300至1400】", "【1200至1300】", "【1200以下】"],
+            ["【1500】", "【1200至1500】", "【300至1200】", "【300以下】"],
         ):
             if len(l) > 0:
                 self.message.append(
@@ -316,13 +321,32 @@ class BiliUser:
 
     async def watchinglive(self):
         if not self.config["WATCHINGLIVE"]:
-            log.info("每日观看不直播任务关闭")
+            log.info("每日观看直播任务关闭")
             return
         HEART_MAX = self.config["WATCHINGLIVE"]
         if self.config["WHACHASYNER"]:
             log.info(f"每日{HEART_MAX}分钟任务开始")
-            n = 0
+            heartNum = 0
+            while True:
+                tasks = []
             for medal in self.medalsNeedDo:
+                    tasks.append(self.api.heartbeat(medal['room_info']['room_id'], medal['medal']['target_id']))
+                await asyncio.gather(*tasks)
+                heartNum += 1
+                log.info(
+                    f"{' '.join([medal['anchor_info']['nick_name'] for medal in self.medalsNeedDo[:5]])} 等共 {len(self.medalsNeedDo)} 个房间的第{heartNum}次心跳包已发送（{heartNum}/{HEART_MAX}）",
+                )
+                await asyncio.sleep(60)
+                if heartNum >= HEART_MAX:
+                    break
+            log.success(f"每日{HEART_MAX}分钟任务完成")
+        else:
+            log.info(f"每日{HEART_MAX}分钟任务开始")
+            medalsNeedDoList = list(self.medalsNeedDo)
+            # 使用shuffle函数随机排序
+            random.shuffle(medalsNeedDoList)
+            n = 0
+            for medal in medalsNeedDoList:
                 n += 1
                 for heartNum in range(1, HEART_MAX + 1):
                     tasks = []
@@ -338,20 +362,6 @@ class BiliUser:
                         )
                 await asyncio.sleep(60)
             log.success(f"每日{HEART_MAX}分钟任务完成")
-        # else:
-        #     log.info(f"每日{HEART_MAX}分钟任务开始")
-        #     for medal in self.medalsNeedDo:
-        #         n += 1
-        #         for heartNum in range(1, HEART_MAX + 1):
-        #             tasks = self.api.heartbeat(
-        #                     medal["room_info"]["room_id"], medal["medal"]["target_id"]
-        #                 )
-        #             if heartNum % 5 == 0:
-        #                 log.info(
-        #                     f"{medal['anchor_info']['nick_name']} 第{heartNum}次心跳包已发送（{n}/{len(self.medalsNeedDo)}）"
-        #                 )
-        #         await asyncio.sleep(60)
-        #     log.success(f"每日{HEART_MAX}分钟任务完成")
 
     async def signInGroups(self):
         if not self.config["SIGNINGROUP"]:
