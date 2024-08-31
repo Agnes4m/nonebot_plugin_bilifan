@@ -36,7 +36,7 @@ class Crypto:
 
 class SingableDict(dict):
     @property
-    def sorted(self):  # noqa: A003
+    def sorted(self):
         """returns a alphabetically sorted version of `self`"""
         return dict(sorted(self.items()))
 
@@ -52,25 +52,27 @@ def retry(tries=3, interval=1):
         async def wrapper(*args, **kwargs):
             count = 0
             func.isRetryable = False
+            log = logger.bind(user=f"{args[0].u.name}")
             while True:
                 try:
                     result = await func(*args, **kwargs)
-                except Exception as E:
+                except Exception as e:
                     count += 1
-                    if type(E) == BiliApiError:  # noqa: E721
-                        if E.code == 1011040:
-                            raise E  # noqa: TRY201
-                        if E.code == 10030:
+                    if isinstance(e, BiliApiError):
+                        if e.code == 1011040:
+                            raise e
+                        elif e.code == 10030:
                             await asyncio.sleep(10)
-                        elif E.code == -504:
+                        elif e.code == -504:
                             pass
                         else:
-                            raise E  # noqa: TRY201
+                            raise e
                     if count > tries:
-                        logger.error(f"API {urlparse(args[1]).path} 调用出现异常: {E!s}")
-                        raise E  # noqa: TRY201
-                    # log.error(f"API {urlparse(args[1]).path} 调用出现异常: {str(E)}，重试中，第{count}次重试")
-                    await asyncio.sleep(interval)
+                        log.error(f"API {urlparse(args[1]).path} 调用出现异常: {str(e)}")
+                        raise e
+                    else:
+                        # log.error(f"API {urlparse(args[1]).path} 调用出现异常: {str(e)}，重试中，第{count}次重试")
+                        await asyncio.sleep(interval)
                     func.isRetryable = True
                 else:
                     if func.isRetryable:
@@ -109,7 +111,7 @@ class BiliApiError(Exception):
 
 
 class BiliApi:
-    headers = {  # noqa: RUF012
+    headers = {
         "User-Agent": "Mozilla/5.0 BiliDroid/6.73.1 (bbcallen@gmail.com) os/android model/Mi 10 Pro mobi_app/android build/6731100 channel/xiaomi innerVer/6731110 osVer/12 network/2",
     }
     from .user import BiliUser
@@ -120,7 +122,7 @@ class BiliApi:
 
     def __check_response(self, resp: dict) -> dict:
         if resp["code"] != 0 or ("mode_info" in resp["data"] and resp["message"] != ""):
-            raise BiliApiError(resp["code"], resp["message"])
+            logger.warning(BiliApiError(resp["code"], resp["message"]))
         return resp["data"]
 
     @retry()
@@ -156,7 +158,8 @@ class BiliApi:
             if first_flag and data["special_list"]:
                 for item in data["special_list"]:
                     # 强制把正在佩戴的牌子加入任务列表
-                    item["medal"]["today_feed"] = 0
+                    # 8月15日删除
+                    # item["medal"]["today_feed"] = 0
                     yield item  # type: ignore
                 self.u.wearedMedal = data["special_list"][0]  # type: ignore
                 first_flag = False
@@ -484,12 +487,10 @@ class BiliApi:
         self.headers.update(
             {
                 "Content-Type": "application/x-www-form-urlencoded",
-            },
+            }
         )
         return await self.__post(
-            url,
-            data=SingableDict(data).signed,
-            headers=self.headers,
+            url, data=SingableDict(data).signed, headers=self.headers
         )
 
     async def getGroups(self):

@@ -1,6 +1,5 @@
 import asyncio
 import uuid
-import random
 from datetime import datetime, timedelta
 
 from aiohttp import ClientSession, ClientTimeout
@@ -326,48 +325,24 @@ class BiliUser:
             log.info("每日观看直播任务关闭")
             return
         HEART_MAX = self.config["WATCHINGLIVE"]
-        if self.config["WHACHASYNER"]:
-            log.info(f"每日{HEART_MAX}分钟任务开始")
-            heartNum = 0
-            while True:
+        log.info(f"每日{HEART_MAX}分钟任务开始")
+        n = 0
+        for medal in self.medalsNeedDo:
+            n += 1
+            for heartNum in range(1, HEART_MAX + 1):
                 tasks = []
-                for medal in self.medalsNeedDo:
-                    tasks.append(
-                        self.api.heartbeat(
-                            medal["room_info"]["room_id"], medal["medal"]["target_id"]
-                        )
+                tasks.append(
+                    self.api.heartbeat(
+                        medal["room_info"]["room_id"], medal["medal"]["target_id"]
                     )
-                    await asyncio.gather(*tasks)
-                    heartNum += 1
+                )
+                await asyncio.gather(*tasks)
+                if heartNum % 5 == 0:
                     log.info(
-                        f"{' '.join([medal['anchor_info']['nick_name'] for medal in self.medalsNeedDo[:5]])} 等共 {len(self.medalsNeedDo)} 个房间的第{heartNum}次心跳包已发送（{heartNum}/{HEART_MAX}）",
+                        f"{medal['anchor_info']['nick_name']} 第{heartNum}次心跳包已发送（{n}/{len(self.medalsNeedDo)}）",
                     )
-                    await asyncio.sleep(60)
-                    if heartNum >= HEART_MAX:
-                        break
-                log.success(f"每日{HEART_MAX}分钟任务完成")
-        else:
-            log.info(f"每日{HEART_MAX}分钟任务开始")
-            medalsNeedDoList = list(self.medalsNeedDo)
-            # 使用shuffle函数随机排序
-            random.shuffle(medalsNeedDoList)
-            n = 0
-            for medal in medalsNeedDoList:
-                n += 1
-                for heartNum in range(1, HEART_MAX + 1):
-                    tasks = []
-                    tasks.append(
-                        self.api.heartbeat(
-                            medal["room_info"]["room_id"], medal["medal"]["target_id"]
-                        )
-                    )
-                    await asyncio.gather(*tasks)
-                    if heartNum % 5 == 0:
-                        log.info(
-                            f"{medal['anchor_info']['nick_name']} 第{heartNum}次心跳包已发送（{n}/{len(self.medalsNeedDo)}）"
-                        )
                 await asyncio.sleep(60)
-            log.success(f"每日{HEART_MAX}分钟任务完成")
+        log.info("SUCCESS", f"每日{HEART_MAX}分钟任务完成")
 
     async def signInGroups(self):
         if not self.config["SIGNINGROUP"]:
