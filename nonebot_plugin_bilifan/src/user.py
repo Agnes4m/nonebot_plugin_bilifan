@@ -39,7 +39,7 @@ class BiliUser:
         self.session = ClientSession(timeout=ClientTimeout(total=3))
         self.api = BiliApi(self, self.session)
 
-        self.retryTimes = 0  # 点赞任务重试次数
+        self.retryTimes = 0  # 任务重试次数
         self.maxRetryTimes = 10  # 最大重试次数
         self.message = []
         self.errmsg = ["错误日志："]
@@ -204,7 +204,8 @@ class BiliUser:
                 self.config["DANMAKU_CHECK_LIGHT"] and medal["medal"]["is_lighted"] == 1
             )
             and not (
-                not self.config["DANMAKU_CHECK_LEVEL"] and medal["medal"]["level"] > 20
+                not self.config["DANMAKU_CHECK_LEVEL"]
+                and medal["medal"]["level"] > self.config["LEVEN"]
             )
         ]
         filtered_medals_length = len(filtered_medals)
@@ -224,7 +225,10 @@ class BiliUser:
                     "{} 房间已点亮，跳过".format(medal["anchor_info"]["nick_name"]),
                 )
                 continue
-            if not self.config["DANMAKU_CHECK_LEVEL"] and medal["medal"]["level"] > 20:
+            if (
+                not self.config["DANMAKU_CHECK_LEVEL"]
+                and medal["medal"]["level"] > self.config["LEVEN"]
+            ):
                 log.info(
                     "{} 房间已满级，跳过".format(medal["anchor_info"]["nick_name"]),
                 )
