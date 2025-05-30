@@ -9,7 +9,7 @@
 
 # nonebot_plugin_bilifan
 
-_✨自动b站粉丝牌✨_
+_✨ 自动 b 站粉丝牌 ✨_
 
 <a href="https://github.com/Agnes4m/nonebot_plugin_bilifan/stargazers">
         <img alt="GitHub stars" src="https://img.shields.io/github/stars/Agnes4m/nonebot_plugin_bilifan" alt="stars">
@@ -29,18 +29,18 @@ _✨自动b站粉丝牌✨_
 
 ## 最新说明~~叔叔不要麻辣~~
 
-- 已修复二维码获取sk失败的问题
-- 已经更新2024.8.2粉丝牌新规则，可以正常使用了
-- alconna支持替换saa支持
+- 已修复二维码获取 sk 失败的问题
+- 已经更新 2024.8.2 粉丝牌新规则，可以正常使用了
+- alconna 支持替换 saa 支持
 
 ## 配置说明
 
-启动一次插件，在bot路径下，"data/bilifan"文件夹内，按需求修改"users.yaml"文件
-运行跨平台使用，支持alconna下所有适配器
+启动一次插件，在 bot 路径下，"data/bilifan"文件夹内，按需求修改"users.yaml"文件
+运行跨平台使用，支持 alconna 下所有适配器
 
 ## 指令
 
-- b站登录 - 返回b站二维码，扫码登录，绑定qq号
+- b 站登录 - 返回 b 站二维码，扫码登录，绑定 qq 号
 - 删除登录信息 - 删除登录信息和绑定
 - 开始刷牌子 - 开始执行命令
 - 自动刷牌子 - 添加或取消定时任务
@@ -51,10 +51,11 @@ _✨自动b站粉丝牌✨_
 
 ## 🙈 其他
 
-- 本项目仅供学习使用，请勿用于商业用途，喜欢该项目可以Star或者提供PR
+- 本项目仅供学习使用，请勿用于商业用途，喜欢该项目可以 Star 或者提供 PR
 - [爱发电](https://afdian.net/a/agnes_digital)
 - [GPL-3.0 License](https://github.com/Agnes4m/nonebot_plugin_bilifan/blob/main/LICENSE) ©[@Agnes4m](https://github.com/Agnes4m)
 
 ## 🌐 感谢
 
-- [新 B 站粉丝牌助手](https://github.com/XiaoMiku01/fansMedalHelper) - 源代码来自于他
+- [新 B 站粉丝牌助手 - XiaoMiku01](https://github.com/XiaoMiku01/fansMedalHelper) - 源代码来自于他
+- [新 B 站粉丝牌助手 - cyb233](https://github.com/cyb233/fansMedalHelper) - 改进代码来自于他

@@ -121,6 +121,7 @@ class BiliApi:
         self.session = s
 
     def __check_response(self, resp: dict) -> dict:
+        logger.trace(resp)
         if resp["code"] != 0 or ("mode_info" in resp["data"] and resp["message"] != ""):
             logger.warning(BiliApiError(resp["code"], resp["message"]))
         return resp["data"]
@@ -421,6 +422,9 @@ class BiliApi:
 
     async def heartbeat(self, room_id: int, up_id: int):
         url = "https://live-trace.bilibili.com/xlive/data-interface/v1/heartbeat/mobileHeartBeat"
+        today_timestamp = int(time.mktime(time.strptime(f"{time.strftime('%Y-%m-%d', time.localtime(time.time()))} 00:00:00", "%Y-%m-%d %H:%M:%S")))
+        now_timestamp = int(time.time())
+        timestamp = now_timestamp - 60 if now_timestamp - 60 > today_timestamp else today_timestamp
         data = {
             "platform": "android",
             "uuid": self.u.uuids[0],
@@ -429,9 +433,9 @@ class BiliApi:
             "room_id": f"{room_id}",
             "parent_id": "6",
             "area_id": "283",
-            "timestamp": f"{int(time.time()) - 60}",
+            "timestamp": f"{timestamp}",
             "secret_key": "axoaadsffcazxksectbbb",
-            "watch_time": "60",
+            "watch_time": f"{now_timestamp - timestamp}",
             "up_id": f"{up_id}",
             "up_level": "40",
             "jump_from": "30000",
@@ -447,7 +451,7 @@ class BiliApi:
             "click_id": self.u.uuids[1],
             "session_id": "",
             "player_type": "0",
-            "client_ts": f"{int(time.time())}",
+            "client_ts": f"{now_timestamp}",
         }
         data.update(
             {
