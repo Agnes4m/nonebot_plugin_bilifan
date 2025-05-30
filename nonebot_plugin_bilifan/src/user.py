@@ -209,7 +209,6 @@ class BiliUser:
         ]
         filtered_medals_length = len(filtered_medals)
         log.info(
-            "INFO",
             "弹幕打卡任务开始....(预计 {} 秒完成)".format(
                 filtered_medals_length
                 * self.config["DANMAKU_CD"]
@@ -222,13 +221,11 @@ class BiliUser:
             n += 1
             if self.config["DANMAKU_CHECK_LIGHT"] and medal["medal"]["is_lighted"] == 1:
                 log.info(
-                    "INFO",
                     "{} 房间已点亮，跳过".format(medal["anchor_info"]["nick_name"]),
                 )
                 continue
             if not self.config["DANMAKU_CHECK_LEVEL"] and medal["medal"]["level"] > 20:
                 log.info(
-                    "INFO",
                     "{} 房间已满级，跳过".format(medal["anchor_info"]["nick_name"]),
                 )
                 continue
@@ -241,7 +238,6 @@ class BiliUser:
                 try:
                     danmaku = await self.api.sendDanmaku(medal["room_info"]["room_id"])
                     log.info(
-                        "INFO",
                         "{} 房间弹幕打卡({}/{})成功: {} ({}/{})".format(
                             medal["anchor_info"]["nick_name"],
                             i + 1,
@@ -253,7 +249,6 @@ class BiliUser:
                     )
                 except Exception as e:
                     log.error(
-                        "ERROR",
                         "{} 房间弹幕打卡({}/{})失败: {}".format(
                             medal["anchor_info"]["nick_name"],
                             i,
@@ -382,7 +377,7 @@ class BiliUser:
                         f"{medal['anchor_info']['nick_name']} 第{heartNum}次心跳包已发送（{n}/{len(self.medalsNeedDo)}）",
                     )
                 await asyncio.sleep(60)
-        log.info("SUCCESS", f"每日{HEART_MAX}分钟任务完成")
+            log.success(f"每日{HEART_MAX}分钟任务完成")
 
     async def signInGroups(self):
         if not self.config["SIGNINGROUP"]:
