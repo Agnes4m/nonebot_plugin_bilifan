@@ -1,4 +1,5 @@
 import asyncio
+import time
 import uuid
 from datetime import datetime, timedelta
 
@@ -38,7 +39,7 @@ class BiliUser:
         self.session = ClientSession(timeout=ClientTimeout(total=3))
         self.api = BiliApi(self, self.session)
 
-        self.retryTimes = 0  # 点赞任务重试次数
+        self.retryTimes = 0  # 任务重试次数
         self.maxRetryTimes = 10  # 最大重试次数
         self.message = []
         self.errmsg = ["错误日志："]
@@ -195,39 +196,76 @@ class BiliUser:
         if not self.config["DANMAKU_CD"]:
             log.info("弹幕任务关闭")
             return
+        # 计算实际执行的长度
+        filtered_medals = [
+            medal
+            for medal in self.medals
+            if not (
+                self.config["DANMAKU_CHECK_LIGHT"] and medal["medal"]["is_lighted"] == 1
+            )
+            and not (
+                not self.config["DANMAKU_CHECK_LEVEL"]
+                and medal["medal"]["level"] > self.config["LEVEN"]
+            )
+        ]
+        filtered_medals_length = len(filtered_medals)
         log.info(
             "弹幕打卡任务开始....(预计 {} 秒完成)".format(
-                len(self.medals) * self.config["DANMAKU_CD"]
-            )
+                filtered_medals_length
+                * self.config["DANMAKU_CD"]
+                * self.config["DANMAKU_NUM"]
+            ),
         )
         n = 0
         successnum = 0
         for medal in self.medals:
             n += 1
+            if self.config["DANMAKU_CHECK_LIGHT"] and medal["medal"]["is_lighted"] == 1:
+                log.info(
+                    "{} 房间已点亮，跳过".format(medal["anchor_info"]["nick_name"]),
+                )
+                continue
+            if (
+                not self.config["DANMAKU_CHECK_LEVEL"]
+                and medal["medal"]["level"] > self.config["LEVEN"]
+            ):
+                log.info(
+                    "{} 房间已满级，跳过".format(medal["anchor_info"]["nick_name"]),
+                )
+                continue
             (
                 (await self.api.wearMedal(medal["medal"]["medal_id"]))
                 if self.config["WEARMEDAL"]
                 else ...
             )
-            try:
-                danmaku = await self.api.sendDanmaku(medal["room_info"]["room_id"])
-                successnum += 1
-                log.debug(
-                    "{} 房间弹幕打卡成功: {} ({}/{})".format(
-                        medal["anchor_info"]["nick_name"], danmaku, n, len(self.medals)
-                    ),
-                )
-            except Exception as e:
-                log.error(
-                    "{} 房间弹幕打卡失败: {}".format(
-                        medal["anchor_info"]["nick_name"], e
+            for i in range(self.config["DANMAKU_NUM"]):
+                try:
+                    danmaku = await self.api.sendDanmaku(medal["room_info"]["room_id"])
+                    log.info(
+                        "{} 房间弹幕打卡({}/{})成功: {} ({}/{})".format(
+                            medal["anchor_info"]["nick_name"],
+                            i + 1,
+                            self.config["DANMAKU_NUM"],
+                            danmaku,
+                            n,
+                            len(self.medals),
+                        ),
                     )
-                )
-                self.errmsg.append(
-                    f"【{self.name}】 {medal['anchor_info']['nick_name']} 房间弹幕打卡失败: {str(e)}"
-                )
-            finally:
-                await asyncio.sleep(self.config["DANMAKU_CD"])
+                except Exception as e:
+                    log.error(
+                        "{} 房间弹幕打卡({}/{})失败: {}".format(
+                            medal["anchor_info"]["nick_name"],
+                            i,
+                            self.config["DANMAKU_NUM"],
+                            e,
+                        ),
+                    )
+                    self.errmsg.append(
+                        f"【{self.name}】 {medal['anchor_info']['nick_name']} 房间弹幕打卡失败: {str(e)}"
+                    )
+                finally:
+                    await asyncio.sleep(self.config["DANMAKU_CD"])
+            successnum += 1
 
         if hasattr(self, "initialMedal"):
             (
@@ -237,7 +275,7 @@ class BiliUser:
             )
         log.success("弹幕打卡任务完成")
         self.message.append(
-            f"【{self.name}】 弹幕打卡任务完成 {successnum}/{len(self.medals)}"
+            f"【{self.name}】 弹幕打卡任务完成 {successnum}/{filtered_medals_length}/{len(self.medals)}"
         )
 
     async def init(self):
@@ -246,7 +284,7 @@ class BiliUser:
             self.errmsg.append("登录失败 可能是登录已过期 , 请发送【b站登录】重新登录")
             await self.session.close()
         else:
-            await self.doSign()
+            # await self.doSign()
             await self.getMedals()
 
     async def start(self):
@@ -289,10 +327,7 @@ class BiliUser:
         ):
             if len(l) > 0:
                 self.message.append(
-                    f"{n}"
-                    + " ".join(l[:5])
-                    + f"{'等' if len(l) > 5 else ''}"
-                    + f" {len(l)}个",
+                    f"{n}{' '.join(l[:5])}{'等' if len(l) > 5 else ''} {len(l)}个"
                 )
 
         if hasattr(self, "initialMedal"):
@@ -330,6 +365,10 @@ class BiliUser:
         for medal in self.medalsNeedDo:
             n += 1
             for heartNum in range(1, HEART_MAX + 1):
+                if self.config["STOPWATCHINGTIME"]:
+                    if int(time.time()) >= self.config["STOPWATCHINGTIME"]:
+                        self.log.log("INFO", "已到设置的时间，自动停止直播任务")
+                        return
                 tasks = []
                 tasks.append(
                     self.api.heartbeat(
@@ -342,7 +381,7 @@ class BiliUser:
                         f"{medal['anchor_info']['nick_name']} 第{heartNum}次心跳包已发送（{n}/{len(self.medalsNeedDo)}）",
                     )
                 await asyncio.sleep(60)
-        log.info("SUCCESS", f"每日{HEART_MAX}分钟任务完成")
+            log.success(f"每日{HEART_MAX}分钟任务完成")
 
     async def signInGroups(self):
         if not self.config["SIGNINGROUP"]:
