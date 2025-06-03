@@ -50,7 +50,7 @@ async def read_yaml(msg_path: Path):
             #     users = yaml.load(f, Loader=yaml.FullLoader)
         if users.get("WRITE_LOG_FILE"):
             logger.add(
-                log_file if users["WRITE_LOG_FILE"] == True else users["WRITE_LOG_FILE"],
+                log_file if users["WRITE_LOG_FILE"] is True else users["WRITE_LOG_FILE"],
                 format=log_format,
                 backtrace=True,
                 diagnose=True,
@@ -62,7 +62,10 @@ async def read_yaml(msg_path: Path):
         assert users["LIKE_CD"] >= 0, "LIKE_CD参数错误"
         # assert users['SHARE_CD'] >= 0, "SHARE_CD参数错误"
         assert users["DANMAKU_CD"] >= 0, "DANMAKU_CD参数错误"
-        assert users["DANMAKU_NUM"] >= 0, "DANMAKU_NUM参数错误"
+        try:
+            assert users["DANMAKU_NUM"] >= 0, "DANMAKU_NUM参数错误"
+        except Exception:
+            pass
         assert users["DANMAKU_CHECK_LIGHT"] in [0, 1], "DANMAKU_CHECK_LIGHT参数错误"
         assert users["DANMAKU_CHECK_LEVEL"] in [0, 1], "DANMAKU_CHECK_LEVEL参数错误"
         assert users["WATCHINGLIVE"] >= 0, "WATCHINGLIVE参数错误"

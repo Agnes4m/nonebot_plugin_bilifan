@@ -33,7 +33,7 @@ logger.opt(colors=True).info(
 
 
 driver = get_driver()
-__version__ = "0.4.3"
+__version__ = "0.4.4"
 __plugin_meta__ = PluginMetadata(
     name="bilifan",
     description="b站粉丝牌~",
@@ -60,6 +60,12 @@ del_only = on_command("bdel", aliases={"取消自动刷牌子", "取消自动粉
 del_all = on_command(
     "bdel_all",
     aliases={"删除全部定时任务"},
+    block=False,
+    permission=SUPERUSER,
+)
+del_config = on_command(
+    "bdel_config",
+    aliases={"b站删除配置"},
     block=False,
     permission=SUPERUSER,
 )
@@ -208,3 +214,15 @@ async def _():
         )
     except Exception:
         logger.warning("定时任务已存在")
+
+
+@del_config.handle()
+async def _(matcher: Matcher, event: Event):
+    """删除配置文件"""
+    folder_path = Path().joinpath("data/bilifan")
+    if folder_path.exists():
+        # 删除文件夹及其所有内容
+        shutil.rmtree(folder_path)
+        print(f"已删除文件夹: {folder_path}")
+    else:
+        print(f"文件夹不存在: {folder_path}")
