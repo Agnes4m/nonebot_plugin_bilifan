@@ -60,6 +60,7 @@ async def read_yaml(msg_path: Path):
             )
         assert users["ASYNC"] in [0, 1], "ASYNC参数错误"
         assert users["LIKE_CD"] >= 0, "LIKE_CD参数错误"
+        assert users["LIKE_NUM"] >= 0, "LIKE_NUM参数错误"
         # assert users['SHARE_CD'] >= 0, "SHARE_CD参数错误"
         assert users["DANMAKU_CD"] >= 0, "DANMAKU_CD参数错误"
         try:
@@ -67,16 +68,19 @@ async def read_yaml(msg_path: Path):
         except Exception:
             pass
         assert users["DANMAKU_CHECK_LIGHT"] in [0, 1], "DANMAKU_CHECK_LIGHT参数错误"
+        assert users["DANMAKU_CHECK_LIVE"] in [0, 1], "DANMAKU_CHECK_LEVEL参数错误"
         assert users["DANMAKU_CHECK_LEVEL"] in [0, 1], "DANMAKU_CHECK_LEVEL参数错误"
         assert users["WATCHINGLIVE"] >= 0, "WATCHINGLIVE参数错误"
         assert users["WEARMEDAL"] in [0, 1], "WEARMEDAL参数错误"
         config = {
             "ASYNC": users["ASYNC"],
             "LIKE_CD": users["LIKE_CD"],
+            "LIKE_NUM": users["LIKE_NUM"],
             # "SHARE_CD": users['SHARE_CD'],
             "DANMAKU_CD": users["DANMAKU_CD"],
             "DANMAKU_NUM": users["DANMAKU_NUM"],
             "DANMAKU_CHECK_LIGHT": users["DANMAKU_CHECK_LIGHT"],
+            "DANMAKU_CHECK_LIVE": users["DANMAKU_CHECK_LIVE"],
             "DANMAKU_CHECK_LEVEL": users["DANMAKU_CHECK_LEVEL"],
             "WATCHINGLIVE": users["WATCHINGLIVE"],
             "WEARMEDAL": users["WEARMEDAL"],

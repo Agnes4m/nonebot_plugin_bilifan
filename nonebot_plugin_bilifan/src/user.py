@@ -132,7 +132,7 @@ class BiliUser:
                 log.info("同步点赞任务开始....")
                 for index, medal in enumerate(failedMedals):
                     i = 0
-                    for i in range(30):
+                    for i in range(self.config["LIKE_NUM"]):
                         tasks = []
                         (
                             tasks.append(
@@ -152,7 +152,7 @@ class BiliUser:
                     )
             else:
                 log.info("异步点赞任务开始....")
-                for i in range(35):
+                for i in range(self.config["LIKE_NUM"]):
                     allTasks = []
                     medal = {}
                     for medal in failedMedals:
@@ -223,6 +223,14 @@ class BiliUser:
             if self.config["DANMAKU_CHECK_LIGHT"] and medal["medal"]["is_lighted"] == 1:
                 log.info(
                     "{} 房间已点亮，跳过".format(medal["anchor_info"]["nick_name"]),
+                )
+                continue
+            if (
+                self.config["DANMAKU_CHECK_LIVE"]
+                and medal["room_info"]["living_status"] == 1
+            ):
+                log.info(
+                    "{} 房间正在直播，跳过".format(medal["anchor_info"]["nick_name"]),
                 )
                 continue
             if (
