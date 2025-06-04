@@ -80,7 +80,7 @@ async def read_yaml(msg_path: Path):
         assert users.get("WATCHINGALL", 0) in [0, 1], "WATCHINGALL参数错误"
         assert users.get("WEARMEDAL", 0) in [0, 1], "WEARMEDAL参数错误"
         assert users.get("WHACHASYNER", 1) in [0, 1], "WHACHASYNER参数错误"
-        assert users.get("SIGNINGROUP", 2) >= 0, "SIGNINGROUP参数错误"
+        assert users.get("SIGNINGROUP", 0) >= 0, "SIGNINGROUP参数错误"
         assert (
             users.get("LEVEN", 20) >= 0 and users.get("LEVEN", 20) <= 40
         ), "LEVEN参数错误"
@@ -95,10 +95,10 @@ async def read_yaml(msg_path: Path):
             "DANMAKU_CHECK_LIVE": users.get("DANMAKU_CHECK_LIVE", 0),
             "DANMAKU_CHECK_LEVEL": users.get("DANMAKU_CHECK_LEVEL", 1),
             "WATCHINGLIVE": users.get("WATCHINGLIVE", 25),
-            "WATCHINGALL": users.get("WATCHINGALL", 1),
-            "WEARMEDAL": users.get("WEARMEDAL", 1),
+            "WATCHINGALL": users.get("WATCHINGALL", 0),
+            "WEARMEDAL": users.get("WEARMEDAL", 0),
             "WHACHASYNER": users.get("WHACHASYNER", 1),
-            "SIGNINGROUP": users.get("SIGNINGROUP", 2),
+            "SIGNINGROUP": users.get("SIGNINGROUP", 0),
             "LEVEN": users.get("LEVEN", 20),
             "STOPWATCHINGTIME": None,
         }
