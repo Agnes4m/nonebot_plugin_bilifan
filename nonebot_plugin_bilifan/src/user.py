@@ -418,7 +418,7 @@ class BiliUser:
                 log.info(
                     f"{medal['anchor_info']['nick_name']} 5次心跳包已发送（{n}/{len(self.medalsOthers)}）"
                 )
-            log.success(f"大于等于20级每日观看任务完成")
+            log.success("大于等于20级每日观看任务完成")
 
     async def signInGroups(self):
         if not self.config["SIGNINGROUP"]:
