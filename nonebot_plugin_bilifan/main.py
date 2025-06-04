@@ -58,35 +58,48 @@ async def read_yaml(msg_path: Path):
                 retention="30 days",
                 level="DEBUG",
             )
-        assert users["ASYNC"] in [0, 1], "ASYNC参数错误"
-        assert users["LIKE_CD"] >= 0, "LIKE_CD参数错误"
-        assert users["LIKE_NUM"] >= 0, "LIKE_NUM参数错误"
-        # assert users['SHARE_CD'] >= 0, "SHARE_CD参数错误"
-        assert users["DANMAKU_CD"] >= 0, "DANMAKU_CD参数错误"
-        try:
-            assert users["DANMAKU_NUM"] >= 0, "DANMAKU_NUM参数错误"
-        except Exception:
-            pass
-        assert users["DANMAKU_CHECK_LIGHT"] in [0, 1], "DANMAKU_CHECK_LIGHT参数错误"
-        assert users["DANMAKU_CHECK_LIVE"] in [0, 1], "DANMAKU_CHECK_LEVEL参数错误"
-        assert users["DANMAKU_CHECK_LEVEL"] in [0, 1], "DANMAKU_CHECK_LEVEL参数错误"
-        assert users["WATCHINGLIVE"] >= 0, "WATCHINGLIVE参数错误"
-        assert users["WEARMEDAL"] in [0, 1], "WEARMEDAL参数错误"
+        assert users.get("ASYNC", 0) in [0, 1], "ASYNC参数错误"
+        assert users.get("LIKE_CD", 3) >= 0, "LIKE_CD参数错误"
+        assert users.get("LIKE_NUM", 30) >= 0, "LIKE_NUM参数错误"
+        # assert users.get('SHARE_CD', 2) >= 0, "SHARE_CD参数错误"
+        assert users.get("DANMAKU_CD", 6) >= 0, "DANMAKU_CD参数错误"
+        assert users.get("DANMAKU_NUM", 10) >= 0, "DANMAKU_NUM参数错误"
+        assert users.get("DANMAKU_CHECK_LIGHT", 0) in [
+            0,
+            1,
+        ], "DANMAKU_CHECK_LIGHT参数错误"
+        assert users.get("DANMAKU_CHECK_LIVE", 0) in [
+            0,
+            1,
+        ], "DANMAKU_CHECK_LEVEL参数错误"
+        assert users.get("DANMAKU_CHECK_LEVEL", 1) in [
+            0,
+            1,
+        ], "DANMAKU_CHECK_LEVEL参数错误"
+        assert users.get("WATCHINGLIVE", 25) >= 0, "WATCHINGLIVE参数错误"
+        assert users.get("WATCHINGALL", 0) in [0, 1], "WATCHINGALL参数错误"
+        assert users.get("WEARMEDAL", 0) in [0, 1], "WEARMEDAL参数错误"
+        assert users.get("WHACHASYNER", 1) in [0, 1], "WHACHASYNER参数错误"
+        assert users.get("SIGNINGROUP", 2) >= 0, "SIGNINGROUP参数错误"
+        assert (
+            users.get("LEVEN", 20) >= 0 and users.get("LEVEN", 20) <= 40
+        ), "LEVEN参数错误"
         config = {
-            "ASYNC": users["ASYNC"],
-            "LIKE_CD": users["LIKE_CD"],
-            "LIKE_NUM": users["LIKE_NUM"],
-            # "SHARE_CD": users['SHARE_CD'],
-            "DANMAKU_CD": users["DANMAKU_CD"],
-            "DANMAKU_NUM": users["DANMAKU_NUM"],
-            "DANMAKU_CHECK_LIGHT": users["DANMAKU_CHECK_LIGHT"],
-            "DANMAKU_CHECK_LIVE": users["DANMAKU_CHECK_LIVE"],
-            "DANMAKU_CHECK_LEVEL": users["DANMAKU_CHECK_LEVEL"],
-            "WATCHINGLIVE": users["WATCHINGLIVE"],
-            "WEARMEDAL": users["WEARMEDAL"],
+            "ASYNC": users.get("ASYNC", 0),
+            "LIKE_CD": users.get("LIKE_CD", 3),
+            "LIKE_NUM": users.get("LIKE_NUM", 30),
+            # "SHARE_CD": users.get('SHARE_CD', 2),
+            "DANMAKU_CD": users.get("DANMAKU_CD", 6),
+            "DANMAKU_NUM": users.get("DANMAKU_NUM", 10),
+            "DANMAKU_CHECK_LIGHT": users.get("DANMAKU_CHECK_LIGHT", 0),
+            "DANMAKU_CHECK_LIVE": users.get("DANMAKU_CHECK_LIVE", 0),
+            "DANMAKU_CHECK_LEVEL": users.get("DANMAKU_CHECK_LEVEL", 1),
+            "WATCHINGLIVE": users.get("WATCHINGLIVE", 25),
+            "WATCHINGALL": users.get("WATCHINGALL", 0),
+            "WEARMEDAL": users.get("WEARMEDAL", 0),
+            "WHACHASYNER": users.get("WHACHASYNER", 1),
             "SIGNINGROUP": users.get("SIGNINGROUP", 2),
             "LEVEN": users.get("LEVEN", 20),
-            "WHACHASYNER": users.get("WHACHASYNER", 1),
             "STOPWATCHINGTIME": None,
         }
         stoptime = users.get("STOPWATCHINGTIME", None)
