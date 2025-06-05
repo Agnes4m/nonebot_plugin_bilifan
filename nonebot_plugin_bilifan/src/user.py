@@ -35,6 +35,7 @@ class BiliUser:
         self.config = config
         self.medals = []  # 用户所有勋章
         self.medalsNeedDo = []  # 用户所有勋章，等级小于20的 未满1500的
+        self.medalsOthers = []  # 剩余勋章，仅观看直播
 
         self.session = ClientSession(timeout=ClientTimeout(total=3))
         self.api = BiliApi(self, self.session)
@@ -96,6 +97,7 @@ class BiliUser:
         """
         self.medals.clear()
         self.medalsNeedDo.clear()
+        self.medalsOthers.clear()
         async for medal in self.api.getFansMedalandRoomID():  # type: ignore
             if self.whiteList == [0]:
                 if medal["medal"]["target_id"] in self.bannedList:
@@ -115,10 +117,13 @@ class BiliUser:
                         f"{medal['anchor_info']['nick_name']} 在白名单中，加入任务",
                     )
         [
-            self.medalsNeedDo.append(medal)
+            (
+                self.medalsNeedDo.append(medal)
+                if medal["medal"]["level"] < self.config["LEVEN"]
+                and medal["medal"]["today_feed"] < 1500
+                else self.medalsOthers.append(medal)
+            )
             for medal in self.medals
-            if medal["medal"]["level"] < self.config["LEVEN"]
-            and medal["medal"]["today_feed"] < 200
         ]
 
     async def like_v3(self, failedMedals: list = []):  # noqa: B006
@@ -132,7 +137,7 @@ class BiliUser:
                 log.info("同步点赞任务开始....")
                 for index, medal in enumerate(failedMedals):
                     i = 0
-                    for i in range(30):
+                    for i in range(self.config["LIKE_NUM"]):
                         tasks = []
                         (
                             tasks.append(
@@ -152,7 +157,7 @@ class BiliUser:
                     )
             else:
                 log.info("异步点赞任务开始....")
-                for i in range(35):
+                for i in range(self.config["LIKE_NUM"]):
                     allTasks = []
                     medal = {}
                     for medal in failedMedals:
@@ -223,6 +228,14 @@ class BiliUser:
             if self.config["DANMAKU_CHECK_LIGHT"] and medal["medal"]["is_lighted"] == 1:
                 log.info(
                     "{} 房间已点亮，跳过".format(medal["anchor_info"]["nick_name"]),
+                )
+                continue
+            if (
+                self.config["DANMAKU_CHECK_LIVE"]
+                and medal["room_info"]["living_status"] == 1
+            ):
+                log.info(
+                    "{} 房间正在直播，跳过".format(medal["anchor_info"]["nick_name"]),
                 )
                 continue
             if (
@@ -306,11 +319,14 @@ class BiliUser:
             return self.message + self.errmsg
         await self.getMedals()
         nameList1, nameList2, nameList3, nameList4 = [], [], [], []
+        unlightList = []
         for medal in self.medals:
-            if medal["medal"]["level"] >= self.config["LEVEN"]:
-                continue
             today_feed = medal["medal"]["today_feed"]
             nick_name = medal["anchor_info"]["nick_name"]
+            if not medal["medal"]["is_lighted"]:
+                unlightList.append(nick_name)
+            if medal["medal"]["level"] >= self.config["LEVEN"]:
+                continue
             if today_feed >= 1500:
                 nameList1.append(nick_name)
             elif 1200 < today_feed <= 1500:
@@ -319,11 +335,11 @@ class BiliUser:
                 nameList3.append(nick_name)
             elif today_feed <= 300:
                 nameList4.append(nick_name)
-        self.message.append(f"【{self.name}】 今日亲密度获取情况如下（20级以下）：")
+        self.message.append(f"【{self.name}】 今日亲密度获取情况如下：")
 
         for l, n in zip(  # noqa: E741
-            [nameList1, nameList2, nameList3, nameList4],
-            ["【1500】", "【1200至1500】", "【300至1200】", "【300以下】"],
+            [nameList1, nameList2, nameList3, nameList4, unlightList],
+            ["【1500】", "【1200至1500】", "【300至1200】", "【300以下】", "【未点亮】"],
         ):
             if len(l) > 0:
                 self.message.append(
@@ -360,14 +376,16 @@ class BiliUser:
             log.info("每日观看直播任务关闭")
             return
         HEART_MAX = self.config["WATCHINGLIVE"]
-        log.info(f"每日{HEART_MAX}分钟任务开始")
+        log.info(
+            f"预计共需运行{HEART_MAX*len(self.medalsNeedDo)+5*self.config['WATCHINGALL']*len(self.medalsOthers)}分钟"
+        )
         n = 0
         for medal in self.medalsNeedDo:
             n += 1
             for heartNum in range(1, HEART_MAX + 1):
                 if self.config["STOPWATCHINGTIME"]:
                     if int(time.time()) >= self.config["STOPWATCHINGTIME"]:
-                        self.log.log("INFO", "已到设置的时间，自动停止直播任务")
+                        log.info("已到设置的时间，自动停止直播任务")
                         return
                 tasks = []
                 tasks.append(
@@ -382,6 +400,25 @@ class BiliUser:
                     )
                 await asyncio.sleep(60)
             log.success(f"每日{HEART_MAX}分钟任务完成")
+            if not self.config["WATCHINGALL"]:
+                log.info("大于等于20级每日观看直播任务关闭")
+                return
+            n = 0
+            for medal in self.medalsOthers:
+                n += 1
+                for heartNum in range(5):
+                    tasks = []
+                    tasks.append(
+                        self.api.heartbeat(
+                            medal["room_info"]["room_id"], medal["medal"]["target_id"]
+                        )
+                    )
+                    await asyncio.gather(*tasks)
+                    await asyncio.sleep(60)
+                log.info(
+                    f"{medal['anchor_info']['nick_name']} 5次心跳包已发送（{n}/{len(self.medalsOthers)}）"
+                )
+            log.success("大于等于20级每日观看任务完成")
 
     async def signInGroups(self):
         if not self.config["SIGNINGROUP"]:
