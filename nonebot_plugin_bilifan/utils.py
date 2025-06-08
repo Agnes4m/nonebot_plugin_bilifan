@@ -71,7 +71,10 @@ async def auto_cup():
                 count[group_id] += 1
             else:
                 count[group_id] = 1
-        await get_bot().send_private_msg(user_id=user_id, message=messageStr)
+        try:
+            await get_bot().send_private_msg(user_id=user_id, message=messageStr)
+        except Exception as e:
+            logger.warning(f"{user_id}用户发送消息失败\n{e}")
 
     for group_num, num in count.items():
         logger.info(f"{group_num}群组自动刷牌子任务执行完成，共{num}个")

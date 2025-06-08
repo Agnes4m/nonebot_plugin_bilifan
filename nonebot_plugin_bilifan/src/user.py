@@ -399,26 +399,30 @@ class BiliUser:
                         f"{medal['anchor_info']['nick_name']} 第{heartNum}次心跳包已发送（{n}/{len(self.medalsNeedDo)}）",
                     )
                 await asyncio.sleep(60)
-            log.success(f"每日{HEART_MAX}分钟任务完成")
-            if not self.config["WATCHINGALL"]:
-                log.info("大于等于20级每日观看直播任务关闭")
-                return
-            n = 0
-            for medal in self.medalsOthers:
-                n += 1
-                for heartNum in range(5):
-                    tasks = []
-                    tasks.append(
-                        self.api.heartbeat(
-                            medal["room_info"]["room_id"], medal["medal"]["target_id"]
-                        )
+        log.success(f"每日{HEART_MAX}分钟任务完成")
+        if not self.config["WATCHINGALL"]:
+            log.info("大于等于20级每日观看直播任务关闭")
+            return
+        n = 0
+        for medal in self.medalsOthers:
+            n += 1
+            for heartNum in range(5):
+                if self.config["STOPWATCHINGTIME"]:
+                    if int(time.time()) >= self.config["STOPWATCHINGTIME"]:
+                        log.info("已到设置的时间，自动停止直播任务")
+                        return
+                tasks = []
+                tasks.append(
+                    self.api.heartbeat(
+                        medal["room_info"]["room_id"], medal["medal"]["target_id"]
                     )
-                    await asyncio.gather(*tasks)
-                    await asyncio.sleep(60)
-                log.info(
-                    f"{medal['anchor_info']['nick_name']} 5次心跳包已发送（{n}/{len(self.medalsOthers)}）"
                 )
-            log.success("大于等于20级每日观看任务完成")
+                await asyncio.gather(*tasks)
+                await asyncio.sleep(60)
+            log.info(
+                f"{medal['anchor_info']['nick_name']} 5次心跳包已发送（{n}/{len(self.medalsOthers)}）"
+            )
+        log.success("大于等于20级每日观看任务完成")
 
     async def signInGroups(self):
         if not self.config["SIGNINGROUP"]:
