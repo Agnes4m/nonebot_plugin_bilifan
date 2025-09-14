@@ -82,7 +82,7 @@ async def read_yaml(msg_path: Path):
         assert users.get("WHACHASYNER", 0) in [0, 1], "WHACHASYNER参数错误"
         assert users.get("SIGNINGROUP", 0) >= 0, "SIGNINGROUP参数错误"
         assert (
-            users.get("LEVEN", 20) >= 0 and users.get("LEVEN", 20) <= 40
+            users.get("LEVEN", 20) >= 0 and users.get("LEVEN", 20) <= 120
         ), "LEVEN参数错误"
         config = {
             "ASYNC": users.get("ASYNC", 0),
