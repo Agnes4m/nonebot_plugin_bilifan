@@ -201,7 +201,7 @@ async def _():
         logger.error("定时格式不正确，不启用定时功能")
         return
     if scheduler is None:
-        logger.error("定时格式不正确，不启用定时功能")
+        logger.error("定时任务未启用，不启用定时功能")
         return
     try:
         logger.info(f"定时任务已配置，将在每天{fields[1]}时{fields[0]}分后自动执行~")
