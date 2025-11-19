@@ -148,7 +148,7 @@ async def draw_QR(login_url: str):  # noqa: N802, RUF029
     qr.make(fit=True)
     img = qr.make_image(fill_color="black", back_color="white")
     buffered = BytesIO()
-    img.save(buffered, format="PNG")
+    img.save(buffered, format="PNG")  # pyright: ignore[reportCallIssue]
     return buffered.getvalue()
     # img.save("qrcode.png")
 
