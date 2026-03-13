@@ -331,6 +331,7 @@ class BiliUser:
                 log.info("所有牌子已满 30 亲密度")
             tasks.append(self.sendDanmaku())
             tasks.append(self.signInGroups())
+            tasks.append(self.doActivitySignIn())
             await asyncio.gather(*tasks)
 
     async def sendmsg(self):
@@ -443,6 +444,32 @@ class BiliUser:
                 f"{medal['anchor_info']['nick_name']} 5次心跳包已发送（{n}/{len(self.medalsOthers)}）"
             )
         log.success(f"大于等于{self.config['LEVEN']}级每日观看任务完成")
+
+    async def doActivitySignIn(self):
+        """
+        活动签到
+        """
+        if not self.config["ACTIVITY_SIGNIN"]:
+            log.info("活动签到任务已关闭")
+            return
+        log.info("活动签到任务开始")
+        n = 0
+        for medal in self.medals:
+            ruid = medal["medal"]["target_id"]
+            nick_name = medal["anchor_info"]["nick_name"]
+            try:
+                await self.api.doActivitySignIn(ruid)
+                log.success(f"{nick_name} 活动签到成功")
+                n += 1
+            except Exception as e:
+                log.error(f"{nick_name} 活动签到失败: {e}")
+                self.errmsg.append(f"【{self.name}】 {nick_name} 活动签到失败: {str(e)}")
+            await asyncio.sleep(self.config["ACTIVITY_SIGNIN"])
+        if n:
+            log.success(f"活动签到任务完成 {n}/{len(self.medals)}")
+            self.message.append(f"【{self.name}】 活动签到任务完成 {n}/{len(self.medals)}")
+        else:
+            log.warning("活动签到任务未完成任何签到")
 
     async def signInGroups(self):
         if not self.config["SIGNINGROUP"]:

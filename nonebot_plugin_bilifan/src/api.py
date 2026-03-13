@@ -539,6 +539,22 @@ class BiliApi:
             headers=self.headers,
         )
 
+    async def doActivitySignIn(self, ruid: int):
+        """
+        活动签到
+        """
+        url = "https://api.live.bilibili.com/xlive/custom-activity-interface/baseActivity/DoSignIn"
+        params = {
+            "access_key": self.u.access_key,
+            "actionKey": "appkey",
+            "appkey": Crypto.APPKEY,
+            "ts": int(time.time()),
+            "activity_id": 109745,
+            "platform": "web",
+            "ruid": ruid,
+        }
+        return await self.__post(url, params=SingableDict(params).signed, headers=self.headers)
+
     async def getOneBattery(self):
         url = "https://api.live.bilibili.com/xlive/app-ucenter/v1/userTask/UserTaskReceiveRewards"
         data = {

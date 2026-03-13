@@ -81,6 +81,7 @@ async def read_yaml(msg_path: Path):
         assert users.get("WEARMEDAL", 0) in [0, 1], "WEARMEDAL参数错误"
         assert users.get("WHACHASYNER", 0) in [0, 1], "WHACHASYNER参数错误"
         assert users.get("SIGNINGROUP", 0) >= 0, "SIGNINGROUP参数错误"
+        assert users.get("ACTIVITY_SIGNIN", 2) >= 0, "ACTIVITY_SIGNIN参数错误"
         assert (
             users.get("LEVEN", 20) >= 0 and users.get("LEVEN", 20) <= 120
         ), "LEVEN参数错误"
@@ -99,6 +100,7 @@ async def read_yaml(msg_path: Path):
             "WEARMEDAL": users.get("WEARMEDAL", 0),
             "WHACHASYNER": users.get("WHACHASYNER", 0),
             "SIGNINGROUP": users.get("SIGNINGROUP", 0),
+            "ACTIVITY_SIGNIN": users.get("ACTIVITY_SIGNIN", 2),
             "LEVEN": users.get("LEVEN", 20),
             "STOPWATCHINGTIME": None,
         }
@@ -126,6 +128,35 @@ async def read_yaml(msg_path: Path):
     except Exception as e:
         logger.error(f"读取配置文件失败,请检查配置文件格式是否正确: {e}")
         exit(1)
+
+    # 将每个用户条目中缺少的配置键补全并回写 users.yaml
+    if not os.environ.get("USERS"):
+        import anyio
+        import yaml
+
+        # 配置键及其全局默认值（排除运行时动态键）
+        config_keys = {
+            k: v for k, v in config.items() if k != "STOPWATCHINGTIME"
+        }
+        changed = False
+        for user in users["USERS"]:
+            for key, default in config_keys.items():
+                if key not in user:
+                    user[key] = default
+                    changed = True
+        if changed:
+            yaml_path = anyio.Path(msg_path / "users.yaml")
+            await yaml_path.write_text(
+                yaml.dump(
+                    users,
+                    allow_unicode=True,
+                    default_flow_style=False,
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+            logger.info("已将缺少的配置项补全并写回 users.yaml")
+
     return users
 
 
@@ -138,11 +169,16 @@ async def mains(msg_path):
 
     for user in users["USERS"]:
         if user["access_key"]:
+            # 用全局 config 作为基础，用用户条目中的配置项覆盖缺少的参数
+            user_config = {**config}
+            for key in config:
+                if key in user:
+                    user_config[key] = user[key]
             bili_user = BiliUser(
                 user["access_key"],
                 user.get("white_uid", ""),
                 user.get("banned_uid", ""),
-                config,
+                user_config,
             )
             init_tasks.append(bili_user.init())
             start_tasks.append(bili_user.start())
