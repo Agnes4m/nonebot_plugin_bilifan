@@ -498,7 +498,9 @@ class BiliUser:
             await asyncio.sleep(self.config["ACTIVITY_SIGNIN"])
         if n:
             log.success(f"活动签到任务完成 {n}/{len(self.medals)}")
-            self.message.append(f"【{self.name}】 活动签到任务完成 {n}/{len(self.medals)}")
+            self.message.append(
+                f"【{self.name}】 活动签到任务完成 {n}/{len(self.medals)}"
+            )
         else:
             log.warning("活动签到任务未完成任何签到")
 

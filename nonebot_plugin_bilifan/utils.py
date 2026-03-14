@@ -40,7 +40,6 @@ def save_config(data):
 
 
 async def auto_cup():
-    from .main import read_yaml
 
     config = load_config()
     count: dict = {}

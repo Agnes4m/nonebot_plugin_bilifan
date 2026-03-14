@@ -553,7 +553,9 @@ class BiliApi:
             "platform": "web",
             "ruid": ruid,
         }
-        return await self.__post(url, params=SingableDict(params).signed, headers=self.headers)
+        return await self.__post(
+            url, params=SingableDict(params).signed, headers=self.headers
+        )
 
     async def getOneBattery(self):
         url = "https://api.live.bilibili.com/xlive/app-ucenter/v1/userTask/UserTaskReceiveRewards"
