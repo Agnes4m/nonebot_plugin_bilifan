@@ -323,9 +323,10 @@ class BiliUser:
         if not await self.loginVerify():
             # 登录失败，尝试使用refresh_token刷新
             if self.refresh_token:
-                log.info(f"登录验证失败，尝试使用refresh_token刷新access_key")
+                log.info("登录验证失败，尝试使用refresh_token刷新access_key")
                 try:
                     from ..login import refresh_access_key
+
                     new_access_key, new_refresh_token = await refresh_access_key(
                         self.refresh_token, self.access_key
                     )
@@ -333,7 +334,7 @@ class BiliUser:
                     self.refresh_token = new_refresh_token
                     self.token_refreshed = True
                     log.success("access_key刷新成功，重新验证登录")
-                    
+
                     # 重新验证登录
                     if await self.loginVerify():
                         await self.getMedals()
@@ -342,7 +343,7 @@ class BiliUser:
                         log.error("刷新后登录验证仍然失败")
                 except Exception as e:
                     log.error(f"刷新access_key失败: {e}")
-            
+
             log.error(f"登录失败 可能是 access_key：{self.access_key} 过期 , 请重新获取")
             self.errmsg.append("登录失败 可能是登录已过期 , 请发送【b站登录】重新登录")
             self.login_expired = True  # 标记登录已过期
