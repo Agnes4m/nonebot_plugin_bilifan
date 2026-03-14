@@ -69,6 +69,12 @@ del_config = on_command(
     block=False,
     permission=SUPERUSER,
 )
+update_config = on_command(
+    "bupdate_config",
+    aliases={"b站更新配置", "更新插件配置"},
+    block=False,
+    permission=SUPERUSER,
+)
 
 
 @login_in.handle()
@@ -226,3 +232,146 @@ async def _(matcher: Matcher, event: Event):
         print(f"已删除文件夹: {folder_path}")
     else:
         print(f"文件夹不存在: {folder_path}")
+
+
+@update_config.handle()
+async def _(matcher: Matcher, event: Event):
+    """批量更新历史配置文件"""
+    import shutil
+
+    import anyio
+    import yaml
+
+    base_path = Path().joinpath("data/bilifan")
+    if not base_path.exists():
+        await matcher.finish("配置目录不存在")
+
+    # 1. 首先更新全局模板文件 data/bilifan/users.yaml
+    global_template_path = base_path / "users.yaml"
+    plugin_template_path = Path(__file__).parent / "users.yaml"
+
+    try:
+        # 读取原有的全局模板（保存用户修改的值）
+        old_global_config = None
+        if global_template_path.exists():
+            backup_path = base_path / "users.yaml.bak"
+            shutil.copy2(global_template_path, backup_path)
+            logger.info(f"已备份全局模板到: {backup_path}")
+
+            old_global_config = yaml.safe_load(
+                await anyio.Path(global_template_path).read_text("u8"),
+            )
+
+        # 读取插件目录的最新模板
+        new_template_config = yaml.safe_load(
+            await anyio.Path(plugin_template_path).read_text("u8"),
+        )
+
+        # 合并配置：使用新模板的结构，但保留旧模板中用户修改的值
+        if old_global_config:
+            for field in new_template_config:
+                if field == "USERS":
+                    continue  # USERS字段使用新模板的结构
+                # 如果旧配置中存在该字段，保留旧值
+                if field in old_global_config:
+                    new_template_config[field] = old_global_config[field]
+
+        # 保存合并后的配置到全局模板（保留用户修改的值）
+        yaml_string = yaml.dump(
+            new_template_config,
+            allow_unicode=True,
+            default_flow_style=False,
+        )
+        await anyio.Path(global_template_path).write_text(yaml_string, "u8")
+        logger.success(f"已更新全局模板文件: {global_template_path}")
+        messages = ["✓ 已更新全局模板文件（保留原有配置值）"]
+
+        # 使用合并后的配置作为模板
+        template_config = new_template_config
+    except Exception as e:
+        await matcher.finish(f"更新全局模板文件失败: {e}")
+
+    updated_count = 0
+    error_count = 0
+
+    updated_count = 0
+    error_count = 0
+
+    # 3. 遍历所有用户目录，更新用户配置
+    for user_dir in base_path.iterdir():
+        if not user_dir.is_dir() or user_dir.name == "__pycache__":
+            continue
+
+        config_file = user_dir / "users.yaml"
+        if not config_file.exists():
+            continue
+
+        try:
+            # 读取配置文件
+            config = yaml.safe_load(
+                await anyio.Path(config_file).read_text("u8"),
+            )
+
+            if not config:
+                continue
+
+            updated = False
+
+            # 更新用户配置字段（智能合并：只添加缺失字段）
+            if (
+                "USERS" in config
+                and config["USERS"]
+                and "USERS" in template_config
+                and template_config["USERS"]
+            ):
+                template_user = (
+                    template_config["USERS"][0] if template_config["USERS"] else {}
+                )
+
+                for user in config["USERS"]:
+                    if not user:
+                        continue
+
+                    # 从模板中添加缺失的用户字段
+                    for field, default_value in template_user.items():
+                        if field not in user:
+                            user[field] = default_value
+                            updated = True
+
+            # 更新全局配置参数（强制覆盖）
+            for field in template_config:
+                if field == "USERS":
+                    continue
+                # 强制覆盖全局配置参数
+                if config.get(field) != template_config[field]:
+                    config[field] = template_config[field]
+                    updated = True
+
+            # 保存配置文件
+            if updated:
+                yaml_string = yaml.dump(
+                    config,
+                    allow_unicode=True,
+                    default_flow_style=False,
+                )
+                await anyio.Path(config_file).write_text(yaml_string, "u8")
+                updated_count += 1
+                messages.append(f"✓ 已更新: {user_dir.name}")
+                logger.info(f"已更新配置文件: {config_file}")
+            else:
+                messages.append(f"○ 无需更新: {user_dir.name}")
+
+        except Exception as e:
+            error_count += 1
+            messages.append(f"✗ 更新失败: {user_dir.name} - {str(e)}")
+            logger.error(f"更新配置文件失败: {config_file}, 错误: {e}")
+
+    # 生成结果消息
+    result_msg = f"批量更新完成！\n成功: {updated_count} 个\n失败: {error_count} 个\n"
+
+    if messages:
+        result_msg += "\n详细信息:\n" + "\n".join(messages[:10])
+        if len(messages) > 10:
+            result_msg += f"\n... 还有 {len(messages) - 10} 条"
+
+    await matcher.finish(result_msg)

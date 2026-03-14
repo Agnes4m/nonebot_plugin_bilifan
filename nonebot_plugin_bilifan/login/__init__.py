@@ -56,6 +56,57 @@ async def get_tv_qrcode_url_and_auth_code():
             raise Exception("get_tv_qrcode_url_and_auth_code error")
 
 
+async def get_user_info(access_key: str):
+    """获取B站用户信息"""
+    api = "https://api.bilibili.com/x/space/myinfo"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36 Edg/97.0.1072.69",
+    }
+    params = {
+        "access_key": access_key,
+    }
+    async with aiohttp.ClientSession() as session:
+        async with session.get(api, headers=headers, params=params) as resp:
+            if resp.status != 200:
+                raise Exception("Failed to get user info")
+            data = await resp.json()
+            if data["code"] == 0:
+                return data["data"]["mid"], data["data"]["name"]
+            raise Exception(f"获取用户信息失败: {data.get('message', 'Unknown error')}")
+
+
+async def refresh_access_key(refresh_token: str, access_key: str):
+    """刷新access_key"""
+    api = "https://passport.bilibili.com/x/passport-tv-login/token/refresh"
+    data = {
+        "access_token": access_key,
+        "refresh_token": refresh_token,
+        "ts": str(int(time.time())),
+    }
+    await signature(data)
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.post(
+            api,
+            data=await map_to_string(data),
+            headers={
+                "Host": "passport.bilibili.com",
+                "Content-Type": "application/x-www-form-urlencoded",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36 Edg/97.0.1072.69",
+            },
+        ) as resp:
+            if resp.status != 200:
+                raise Exception("Failed to refresh token")
+            response_dict = await resp.json()
+            if response_dict["code"] == 0:
+                new_access_key = response_dict["data"]["access_token"]
+                new_refresh_token = response_dict["data"]["refresh_token"]
+                logger.success("access_key刷新成功")
+                return new_access_key, new_refresh_token
+            else:
+                raise Exception(f"刷新失败: {response_dict.get('message', 'Unknown error')}")
+
+
 async def verify_login(login_key: str, data_path: Path):
     api = "https://passport.bilibili.com/x/passport-tv-login/qrcode/poll"
     data = {
@@ -82,43 +133,85 @@ async def verify_login(login_key: str, data_path: Path):
                 code = response_dict["code"]
                 try:
                     access_key = response_dict["data"]["access_token"]
+                    refresh_token = response_dict["data"].get("refresh_token", "")
                 except Exception:
                     access_key = ""
+                    refresh_token = ""
                     await asyncio.sleep(3)
 
             if code == 0:
                 logger.success("登录成功")
+                
+                # 获取B站用户信息
+                try:
+                    bili_uid, bili_name = await get_user_info(access_key)
+                    logger.info(f"获取到B站用户信息: UID={bili_uid}, 昵称={bili_name}")
+                except Exception as e:
+                    logger.error(f"获取用户信息失败: {e}")
+                    return False
+                
                 filename = "login_info.txt"
                 data_path.mkdir(parents=True, exist_ok=True)
                 with (data_path / filename).open(mode="w", encoding="utf-8") as f:
                     f.write(access_key)
+                
+                # 保存refresh_token
+                if refresh_token:
+                    with (data_path / "refresh_token.txt").open(mode="w", encoding="utf-8") as f:
+                        f.write(refresh_token)
+                    logger.info("refresh_token已保存")
+                
                 if not Path(data_path / "users.yaml").is_file():
                     logger.info("初始化配置文件")
                     shutil.copy2(
                         Path().joinpath("data/bilifan/users.yaml"),
                         data_path / "users.yaml",
                     )
+                
                 config = yaml.safe_load(
                     await anyio.Path(data_path / "users.yaml").read_text("u8"),
                 )
-                # with Path(data_path / "users.yaml").open(
-                #     "r", encoding="utf-8"
-                # ) as f:
-                #     config = yaml.safe_load(f)
-
-                config["USERS"][0]["access_key"] = access_key
+                
+                # 查找是否已存在该B站用户
+                existing_index = -1
+                for i, user in enumerate(config["USERS"]):
+                    if user.get("bili_uid") == bili_uid:
+                        existing_index = i
+                        logger.info(f"检测到B站用户 {bili_name}(UID:{bili_uid}) 已存在，将更新access_key")
+                        break
+                
+                if existing_index >= 0:
+                    # 顶替旧的access_key并清除过期标记
+                    config["USERS"][existing_index]["access_key"] = access_key
+                    config["USERS"][existing_index]["bili_name"] = bili_name
+                    config["USERS"][existing_index]["is_expired"] = False
+                    if refresh_token:
+                        config["USERS"][existing_index]["refresh_token"] = refresh_token
+                    result_msg = f"已更新B站用户 {bili_name}(UID:{bili_uid}) 的access_key"
+                else:
+                    # 新增用户
+                    new_user = {
+                        "access_key": access_key,
+                        "bili_uid": bili_uid,
+                        "bili_name": bili_name,
+                        "white_uid": 0,
+                        "banned_uid": 0,
+                        "is_expired": False,
+                    }
+                    if refresh_token:
+                        new_user["refresh_token"] = refresh_token
+                    config["USERS"].append(new_user)
+                    result_msg = f"已添加新的B站用户 {bili_name}(UID:{bili_uid})"
+                    logger.info(result_msg)
+                
                 yaml_string = yaml.dump(
                     config,
                     allow_unicode=True,
                     default_flow_style=False,
                 )
                 await anyio.Path(data_path / "users.yaml").write_text(yaml_string, "u8")
-
-                # with Path(data_path / "users.yaml").open(
-                #     "w", encoding="utf-8"
-                # ) as f:  # noqa: ASYNC101
-                #     yaml.dump(config, f, allow_unicode=True, default_flow_style=False)
-                return "access_key已保存"
+                
+                return result_msg
             await asyncio.sleep(3)
 
 
