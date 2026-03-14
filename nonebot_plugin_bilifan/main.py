@@ -81,6 +81,8 @@ async def read_yaml(msg_path: Path):
         assert users.get("WEARMEDAL", 0) in [0, 1], "WEARMEDAL参数错误"
         assert users.get("WHACHASYNER", 0) in [0, 1], "WHACHASYNER参数错误"
         assert users.get("SIGNINGROUP", 0) >= 0, "SIGNINGROUP参数错误"
+        assert users.get("ACTIVITY_SIGNIN", 2) >= 0, "ACTIVITY_SIGNIN参数错误"
+        assert users.get("RANDOM_DELAY", 0) >= 0, "RANDOM_DELAY参数错误"
         assert (
             users.get("LEVEN", 20) >= 0 and users.get("LEVEN", 20) <= 120
         ), "LEVEN参数错误"
@@ -99,6 +101,8 @@ async def read_yaml(msg_path: Path):
             "WEARMEDAL": users.get("WEARMEDAL", 0),
             "WHACHASYNER": users.get("WHACHASYNER", 0),
             "SIGNINGROUP": users.get("SIGNINGROUP", 0),
+            "ACTIVITY_SIGNIN": users.get("ACTIVITY_SIGNIN", 2),
+            "RANDOM_DELAY": users.get("RANDOM_DELAY", 0),
             "LEVEN": users.get("LEVEN", 20),
             "STOPWATCHINGTIME": None,
         }
@@ -135,21 +139,90 @@ async def mains(msg_path):
     init_tasks = []
     start_tasks = []
     catch_msg = []
+    bili_users = []  # 保存 BiliUser 实例以便后续更新配置
 
-    for user in users["USERS"]:
+    for index, user in enumerate(users["USERS"]):
         if user["access_key"]:
+            # 检查是否已标记为过期
+            if user.get("is_expired", False):
+                bili_uid = user.get("bili_uid", 0)
+                bili_name = user.get("bili_name", "未知")
+                logger.warning(
+                    f"跳过已过期的账号: {bili_name}(UID:{bili_uid})，请重新登录"
+                )
+                continue
+
+            # 用全局 config 作为基础，用用户条目中的配置项覆盖缺少的参数
+            user_config = {**config}
+            for key in config:
+                if key in user:
+                    user_config[key] = user[key]
             bili_user = BiliUser(
                 user["access_key"],
                 user.get("white_uid", ""),
                 user.get("banned_uid", ""),
-                config,
+                user_config,
+                user.get("bili_uid", 0),
+                index,
+                user.get("refresh_token", ""),
             )
+            bili_users.append(bili_user)
             init_tasks.append(bili_user.init())
             start_tasks.append(bili_user.start())
             catch_msg.append(bili_user.sendmsg())
 
     try:
         await asyncio.gather(*init_tasks)
+
+        # 检查是否有账号登录过期或token已刷新，并更新配置文件
+        expired_users = []
+        refreshed_users = []
+        for bili_user in bili_users:
+            if bili_user.login_expired:
+                expired_users.append(bili_user)
+            elif bili_user.token_refreshed:
+                refreshed_users.append(bili_user)
+
+        if expired_users or refreshed_users:
+            # 更新配置文件
+            import anyio
+            import yaml
+
+            config_data = yaml.safe_load(
+                await anyio.Path(msg_path / "users.yaml").read_text("u8"),
+            )
+
+            # 标记过期账号
+            for bili_user in expired_users:
+                if bili_user.user_index >= 0:
+                    config_data["USERS"][bili_user.user_index]["is_expired"] = True
+                    logger.info(f"已标记账号 {bili_user.bili_uid} 为过期状态")
+
+            # 更新已刷新的token
+            for bili_user in refreshed_users:
+                if bili_user.user_index >= 0:
+                    config_data["USERS"][bili_user.user_index][
+                        "access_key"
+                    ] = bili_user.access_key
+                    config_data["USERS"][bili_user.user_index][
+                        "refresh_token"
+                    ] = bili_user.refresh_token
+                    logger.info(
+                        f"已更新账号 {bili_user.bili_uid} 的access_key和refresh_token"
+                    )
+
+            yaml_string = yaml.dump(
+                config_data,
+                allow_unicode=True,
+                default_flow_style=False,
+            )
+            await anyio.Path(msg_path / "users.yaml").write_text(yaml_string, "u8")
+
+            if expired_users:
+                logger.warning("配置文件已更新，过期账号将在下次执行时跳过")
+            if refreshed_users:
+                logger.success("配置文件已更新，已刷新的token已保存")
+
         await asyncio.gather(*start_tasks)
     except Exception as e:
         logger.exception(e)

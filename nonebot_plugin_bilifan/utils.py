@@ -8,7 +8,7 @@ from nonebot import get_bot
 # from nonebot.adapters import Bot
 from nonebot.log import logger
 
-from .main import mains
+from .main import mains, read_yaml
 
 config_dir = Path("data/bilifan")
 config_dir.mkdir(parents=True, exist_ok=True)
@@ -40,13 +40,26 @@ def save_config(data):
 
 
 async def auto_cup():
+
     config = load_config()
     count: dict = {}
     tasks = []
 
+    # 读取全局配置获取 RANDOM_DELAY
+    users_config = await read_yaml(Path().joinpath("data/bilifan"))
+    random_delay = users_config.get("RANDOM_DELAY", 0)
+
     for user_id, group_id in config.items():  # noqa: B007
         msg_path = Path(f"data/bilifan/{user_id}/login_info.txt")
         if msg_path.is_file():
+            # 如果配置了随机延时，则在启动任务前延时
+            if random_delay > 0:
+                import random
+
+                delay = random.randint(1, random_delay)
+                logger.info(f"{user_id} 将在 {delay} 秒后启动任务")
+                await asyncio.sleep(delay)
+
             task = asyncio.create_task(mains(msg_path.parent))
             tasks.append((user_id, group_id, task))
         else:

@@ -17,11 +17,17 @@ class BiliUser:
         whiteUIDs: str = "",
         bannedUIDs: str = "",
         config: dict = {},  # noqa: B006
+        bili_uid: int = 0,
+        user_index: int = -1,
+        refresh_token: str = "",
     ):
         from .api import BiliApi
 
         self.mid, self.name = 0, ""
         self.access_key = access_token  # 登录凭证
+        self.refresh_token = refresh_token  # 刷新令牌
+        self.bili_uid = bili_uid  # B站用户UID
+        self.user_index = user_index  # 用户在配置文件中的索引
         try:
             self.whiteList = [
                 int(x if x else 0) for x in str(whiteUIDs).split(",")
@@ -45,6 +51,8 @@ class BiliUser:
         self.message = []
         self.errmsg = ["错误日志："]
         self.uuids = [str(uuid.uuid4()) for _ in range(2)]
+        self.login_expired = False  # 登录是否过期
+        self.token_refreshed = False  # token是否已刷新
 
     async def loginVerify(self) -> bool:
         """
@@ -313,8 +321,32 @@ class BiliUser:
 
     async def init(self):
         if not await self.loginVerify():
+            # 登录失败，尝试使用refresh_token刷新
+            if self.refresh_token:
+                log.info("登录验证失败，尝试使用refresh_token刷新access_key")
+                try:
+                    from ..login import refresh_access_key
+
+                    new_access_key, new_refresh_token = await refresh_access_key(
+                        self.refresh_token, self.access_key
+                    )
+                    self.access_key = new_access_key
+                    self.refresh_token = new_refresh_token
+                    self.token_refreshed = True
+                    log.success("access_key刷新成功，重新验证登录")
+
+                    # 重新验证登录
+                    if await self.loginVerify():
+                        await self.getMedals()
+                        return
+                    else:
+                        log.error("刷新后登录验证仍然失败")
+                except Exception as e:
+                    log.error(f"刷新access_key失败: {e}")
+
             log.error(f"登录失败 可能是 access_key：{self.access_key} 过期 , 请重新获取")
             self.errmsg.append("登录失败 可能是登录已过期 , 请发送【b站登录】重新登录")
+            self.login_expired = True  # 标记登录已过期
             await self.session.close()
         else:
             # await self.doSign()
@@ -331,6 +363,7 @@ class BiliUser:
                 log.info("所有牌子已满 30 亲密度")
             tasks.append(self.sendDanmaku())
             tasks.append(self.signInGroups())
+            tasks.append(self.doActivitySignIn())
             await asyncio.gather(*tasks)
 
     async def sendmsg(self):
@@ -443,6 +476,34 @@ class BiliUser:
                 f"{medal['anchor_info']['nick_name']} 5次心跳包已发送（{n}/{len(self.medalsOthers)}）"
             )
         log.success(f"大于等于{self.config['LEVEN']}级每日观看任务完成")
+
+    async def doActivitySignIn(self):
+        """
+        活动签到
+        """
+        if not self.config["ACTIVITY_SIGNIN"]:
+            log.info("活动签到任务已关闭")
+            return
+        log.info("活动签到任务开始")
+        n = 0
+        for medal in self.medals:
+            ruid = medal["medal"]["target_id"]
+            nick_name = medal["anchor_info"]["nick_name"]
+            try:
+                await self.api.doActivitySignIn(ruid)
+                log.success(f"{nick_name} 活动签到成功")
+                n += 1
+            except Exception as e:
+                log.error(f"{nick_name} 活动签到失败: {e}")
+                self.errmsg.append(f"【{self.name}】 {nick_name} 活动签到失败: {str(e)}")
+            await asyncio.sleep(self.config["ACTIVITY_SIGNIN"])
+        if n:
+            log.success(f"活动签到任务完成 {n}/{len(self.medals)}")
+            self.message.append(
+                f"【{self.name}】 活动签到任务完成 {n}/{len(self.medals)}"
+            )
+        else:
+            log.warning("活动签到任务未完成任何签到")
 
     async def signInGroups(self):
         if not self.config["SIGNINGROUP"]:
