@@ -77,7 +77,9 @@ async def get_user_info(access_key: str):
             resp_data = await resp.json()
             if resp_data["code"] == 0:
                 return resp_data["data"]["mid"], resp_data["data"]["name"]
-            raise Exception(f"获取用户信息失败: {resp_data.get('message', 'Unknown error')}")
+            raise Exception(
+                f"获取用户信息失败: {resp_data.get('message', 'Unknown error')}"
+            )
 
 
 async def refresh_access_key(refresh_token: str, access_key: str):
