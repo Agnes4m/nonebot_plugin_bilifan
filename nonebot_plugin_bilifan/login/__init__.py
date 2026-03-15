@@ -89,7 +89,7 @@ async def refresh_access_key(refresh_token: str, access_key: str):
         "ts": str(int(time.time())),
     }
     await signature(data)
-    
+
     async with aiohttp.ClientSession() as session:
         async with session.post(
             api,
@@ -109,7 +109,9 @@ async def refresh_access_key(refresh_token: str, access_key: str):
                 logger.success("access_key刷新成功")
                 return new_access_key, new_refresh_token
             else:
-                raise Exception(f"刷新失败: {response_dict.get('message', 'Unknown error')}")
+                raise Exception(
+                    f"刷新失败: {response_dict.get('message', 'Unknown error')}"
+                )
 
 
 async def verify_login(login_key: str, data_path: Path):
@@ -146,7 +148,7 @@ async def verify_login(login_key: str, data_path: Path):
 
             if code == 0:
                 logger.success("登录成功")
-                
+
                 # 获取B站用户信息
                 try:
                     bili_uid, bili_name = await get_user_info(access_key)
@@ -154,37 +156,41 @@ async def verify_login(login_key: str, data_path: Path):
                 except Exception as e:
                     logger.error(f"获取用户信息失败: {e}")
                     return False
-                
+
                 filename = "login_info.txt"
                 data_path.mkdir(parents=True, exist_ok=True)
                 with (data_path / filename).open(mode="w", encoding="utf-8") as f:
                     f.write(access_key)
-                
+
                 # 保存refresh_token
                 if refresh_token:
-                    with (data_path / "refresh_token.txt").open(mode="w", encoding="utf-8") as f:
+                    with (data_path / "refresh_token.txt").open(
+                        mode="w", encoding="utf-8"
+                    ) as f:
                         f.write(refresh_token)
                     logger.info("refresh_token已保存")
-                
+
                 if not Path(data_path / "users.yaml").is_file():
                     logger.info("初始化配置文件")
                     shutil.copy2(
                         Path().joinpath("data/bilifan/users.yaml"),
                         data_path / "users.yaml",
                     )
-                
+
                 config = yaml.safe_load(
                     await anyio.Path(data_path / "users.yaml").read_text("u8"),
                 )
-                
+
                 # 查找是否已存在该B站用户
                 existing_index = -1
                 for i, user in enumerate(config["USERS"]):
                     if user.get("bili_uid") == bili_uid:
                         existing_index = i
-                        logger.info(f"检测到B站用户 {bili_name}(UID:{bili_uid}) 已存在，将更新access_key")
+                        logger.info(
+                            f"检测到B站用户 {bili_name}(UID:{bili_uid}) 已存在，将更新access_key"
+                        )
                         break
-                
+
                 if existing_index >= 0:
                     # 顶替旧的access_key并清除过期标记
                     config["USERS"][existing_index]["access_key"] = access_key
@@ -192,7 +198,9 @@ async def verify_login(login_key: str, data_path: Path):
                     config["USERS"][existing_index]["is_expired"] = False
                     if refresh_token:
                         config["USERS"][existing_index]["refresh_token"] = refresh_token
-                    result_msg = f"已更新B站用户 {bili_name}(UID:{bili_uid}) 的access_key"
+                    result_msg = (
+                        f"已更新B站用户 {bili_name}(UID:{bili_uid}) 的access_key"
+                    )
                 else:
                     # 新增用户
                     new_user = {
@@ -208,14 +216,14 @@ async def verify_login(login_key: str, data_path: Path):
                     config["USERS"].append(new_user)
                     result_msg = f"已添加新的B站用户 {bili_name}(UID:{bili_uid})"
                     logger.info(result_msg)
-                
+
                 yaml_string = yaml.dump(
                     config,
                     allow_unicode=True,
                     default_flow_style=False,
                 )
                 await anyio.Path(data_path / "users.yaml").write_text(yaml_string, "u8")
-                
+
                 return result_msg
             await asyncio.sleep(3)
 

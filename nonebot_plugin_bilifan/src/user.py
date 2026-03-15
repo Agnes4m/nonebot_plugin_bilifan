@@ -356,7 +356,7 @@ class BiliUser:
         if not await self.loginVerify():
             # 登录失败，尝试使用refresh_token刷新
             if self.refresh_token:
-                log.info(f"登录验证失败，尝试使用refresh_token刷新access_key")
+                log.info("登录验证失败，尝试使用refresh_token刷新access_key")
                 try:
                     from ..login import refresh_access_key
 
