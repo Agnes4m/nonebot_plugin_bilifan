@@ -58,21 +58,26 @@ async def get_tv_qrcode_url_and_auth_code():
 
 async def get_user_info(access_key: str):
     """获取B站用户信息"""
-    api = "https://api.bilibili.com/x/space/myinfo"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36 Edg/97.0.1072.69",
-    }
-    params = {
+    api = "https://app.bilibili.com/x/v2/account/mine"
+    data = {
         "access_key": access_key,
+        "ts": str(int(time.time())),
     }
+    await signature(data)
     async with aiohttp.ClientSession() as session:
-        async with session.get(api, headers=headers, params=params) as resp:
+        async with session.get(
+            api,
+            params=data,
+            headers={
+                "User-Agent": "Mozilla/5.0 BiliDroid/7.69.0 (bbcallen@gmail.com)",
+            },
+        ) as resp:
             if resp.status != 200:
                 raise Exception("Failed to get user info")
-            data = await resp.json()
-            if data["code"] == 0:
-                return data["data"]["mid"], data["data"]["name"]
-            raise Exception(f"获取用户信息失败: {data.get('message', 'Unknown error')}")
+            resp_data = await resp.json()
+            if resp_data["code"] == 0:
+                return resp_data["data"]["mid"], resp_data["data"]["name"]
+            raise Exception(f"获取用户信息失败: {resp_data.get('message', 'Unknown error')}")
 
 
 async def refresh_access_key(refresh_token: str, access_key: str):
@@ -243,27 +248,3 @@ async def draw_QR(login_url: str):  # noqa: N802, RUF029
     buffered = BytesIO()
     img.save(buffered, format="PNG")  # pyright: ignore[reportCallIssue]
     return buffered.getvalue()
-    # img.save("qrcode.png")
-
-
-# async def loginBili():
-
-
-#     login_url, auth_code = await get_tv_qrcode_url_and_auth_code()
-#     qrcode_terminal.draw(login_url)
-#     print("或将此链接复制到手机B站打开:", login_url)
-#     while True:
-#         if await verify_login(auth_code):
-#             print("登录成功！")
-#             break
-#         else:
-#             time.sleep(3)
-#             print("等待扫码登录中...")
-
-
-# async def main():
-#     loginBili()
-#     input()
-
-# if __name__ == "__main__":
-#     main()

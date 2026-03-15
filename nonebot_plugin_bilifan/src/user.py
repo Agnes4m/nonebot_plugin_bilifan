@@ -133,6 +133,32 @@ class BiliUser:
             )
             for medal in self.medals
         ]
+        # 根据 WATCHLIVE_ORDER 配置对 medalsNeedDo 排序
+        order = self.config.get("WATCHLIVE_ORDER", 0)
+        if order == 1:
+            self.medalsNeedDo.sort(key=lambda m: m["medal"]["level"], reverse=True)
+            log.info("观看直播顺序：高等级优先")
+        elif order == 2:
+            self.medalsNeedDo.sort(key=lambda m: m["medal"]["level"])
+            log.info("观看直播顺序：低等级优先")
+        elif order == 3:
+            self.medalsNeedDo.sort(
+                key=lambda m: m["medal"].get("next_intimacy", 0)
+                - m["medal"].get("intimacy", 0)
+            )
+            log.info("观看直播顺序：即将升级优先（距升级亲密度差值升序）")
+        elif order == 4:
+            self.medalsNeedDo.sort(
+                key=lambda m: m["medal"].get("next_intimacy", 0)
+                - m["medal"].get("intimacy", 0),
+                reverse=True,
+            )
+            log.info("观看直播顺序：不即将升级优先（距升级亲密度差值降序）")
+        else:
+            import random as _random
+
+            _random.shuffle(self.medalsNeedDo)
+            log.info("观看直播顺序：随机")
 
     async def like_v3(self, failedMedals: list = []):  # noqa: B006
         if self.config["LIKE_CD"] == 0:
@@ -141,6 +167,13 @@ class BiliUser:
         try:
             if not failedMedals:
                 failedMedals = self.medals
+            if self.config.get("LIKE_CHECK_LIGHT", 0):
+                failedMedals = [
+                    medal for medal in failedMedals if not medal["medal"]["is_lighted"]
+                ]
+                log.info(
+                    f"LIKE_CHECK_LIGHT已开启，过滤后剩余 {len(failedMedals)} 个未点亮粉丝牌需要点赞"
+                )
             if not self.config["ASYNC"]:
                 log.info("同步点赞任务开始....")
                 for index, medal in enumerate(failedMedals):
@@ -326,6 +359,7 @@ class BiliUser:
                 log.info(f"登录验证失败，尝试使用refresh_token刷新access_key")
                 try:
                     from ..login import refresh_access_key
+
                     new_access_key, new_refresh_token = await refresh_access_key(
                         self.refresh_token, self.access_key
                     )
@@ -333,7 +367,7 @@ class BiliUser:
                     self.refresh_token = new_refresh_token
                     self.token_refreshed = True
                     log.success("access_key刷新成功，重新验证登录")
-                    
+
                     # 重新验证登录
                     if await self.loginVerify():
                         await self.getMedals()
@@ -342,7 +376,7 @@ class BiliUser:
                         log.error("刷新后登录验证仍然失败")
                 except Exception as e:
                     log.error(f"刷新access_key失败: {e}")
-            
+
             log.error(f"登录失败 可能是 access_key：{self.access_key} 过期 , 请重新获取")
             self.errmsg.append("登录失败 可能是登录已过期 , 请发送【b站登录】重新登录")
             self.login_expired = True  # 标记登录已过期
