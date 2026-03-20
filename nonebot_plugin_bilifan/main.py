@@ -61,6 +61,10 @@ async def read_yaml(msg_path: Path):
         assert users.get("ASYNC", 0) in [0, 1], "ASYNC参数错误"
         assert users.get("LIKE_CD", 3) >= 0, "LIKE_CD参数错误"
         assert users.get("LIKE_NUM", 30) >= 0, "LIKE_NUM参数错误"
+        assert users.get("LIKE_CHECK_LIGHT", 0) in [
+            0,
+            1,
+        ], "LIKE_CHECK_LIGHT参数错误"
         # assert users.get('SHARE_CD', 2) >= 0, "SHARE_CD参数错误"
         assert users.get("DANMAKU_CD", 6) >= 0, "DANMAKU_CD参数错误"
         assert users.get("DANMAKU_NUM", 10) >= 0, "DANMAKU_NUM参数错误"
@@ -76,6 +80,13 @@ async def read_yaml(msg_path: Path):
             0,
             1,
         ], "DANMAKU_CHECK_LEVEL参数错误"
+        assert users.get("WATCHLIVE_ORDER", 0) in [
+            0,
+            1,
+            2,
+            3,
+            4,
+        ], "WATCHLIVE_ORDER参数错误"
         assert users.get("WATCHINGLIVE", 25) >= 0, "WATCHINGLIVE参数错误"
         assert users.get("WATCHINGALL", 0) in [0, 1], "WATCHINGALL参数错误"
         assert users.get("WEARMEDAL", 0) in [0, 1], "WEARMEDAL参数错误"
@@ -90,12 +101,14 @@ async def read_yaml(msg_path: Path):
             "ASYNC": users.get("ASYNC", 0),
             "LIKE_CD": users.get("LIKE_CD", 3),
             "LIKE_NUM": users.get("LIKE_NUM", 30),
+            "LIKE_CHECK_LIGHT": users.get("LIKE_CHECK_LIGHT", 0),
             # "SHARE_CD": users.get('SHARE_CD', 2),
             "DANMAKU_CD": users.get("DANMAKU_CD", 6),
             "DANMAKU_NUM": users.get("DANMAKU_NUM", 10),
             "DANMAKU_CHECK_LIGHT": users.get("DANMAKU_CHECK_LIGHT", 0),
             "DANMAKU_CHECK_LIVE": users.get("DANMAKU_CHECK_LIVE", 0),
             "DANMAKU_CHECK_LEVEL": users.get("DANMAKU_CHECK_LEVEL", 1),
+            "WATCHLIVE_ORDER": users.get("WATCHLIVE_ORDER", 0),
             "WATCHINGLIVE": users.get("WATCHINGLIVE", 25),
             "WATCHINGALL": users.get("WATCHINGALL", 0),
             "WEARMEDAL": users.get("WEARMEDAL", 0),
