@@ -49,7 +49,7 @@ async def auto_cup():
     users_config = await read_yaml(Path().joinpath("data/bilifan"))
     random_delay = users_config.get("RANDOM_DELAY", 0)
 
-    for user_id, group_id in config.items():  # noqa: B007
+    for user_id, group_id in config.items():
         msg_path = Path(f"data/bilifan/{user_id}/login_info.txt")
         if msg_path.is_file():
             # 如果配置了随机延时，则在启动任务前延时
