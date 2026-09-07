@@ -64,22 +64,22 @@ async def get_user_info(access_key: str):
         "ts": str(int(time.time())),
     }
     await signature(data)
-    async with aiohttp.ClientSession() as session:
-        async with session.get(
+    async with (
+        aiohttp.ClientSession() as session,
+        session.get(
             api,
             params=data,
             headers={
                 "User-Agent": "Mozilla/5.0 BiliDroid/7.69.0 (bbcallen@gmail.com)",
             },
-        ) as resp:
-            if resp.status != 200:
-                raise Exception("Failed to get user info")
-            resp_data = await resp.json()
-            if resp_data["code"] == 0:
-                return resp_data["data"]["mid"], resp_data["data"]["name"]
-            raise Exception(
-                f"获取用户信息失败: {resp_data.get('message', 'Unknown error')}"
-            )
+        ) as resp,
+    ):
+        if resp.status != 200:
+            raise Exception("Failed to get user info")
+        resp_data = await resp.json()
+        if resp_data["code"] == 0:
+            return resp_data["data"]["mid"], resp_data["data"]["name"]
+        raise Exception(f"获取用户信息失败: {resp_data.get('message', 'Unknown error')}")
 
 
 async def refresh_access_key(refresh_token: str, access_key: str):
@@ -234,7 +234,7 @@ appkey = "4409e2ce8ffd12b8"
 appsec = "59b43e04ad6965f34319062b478f83dd"
 
 
-async def signature(params: dict):  # noqa: RUF029
+async def signature(params: dict):
     keys = list(params.keys())
     params["appkey"] = appkey
     keys.append("appkey")
@@ -245,11 +245,11 @@ async def signature(params: dict):  # noqa: RUF029
     params["sign"] = hash_.hexdigest()
 
 
-async def map_to_string(params: dict) -> str:  # noqa: RUF029
+async def map_to_string(params: dict) -> str:
     return "&".join([k + "=" + v for k, v in params.items()])
 
 
-async def draw_QR(login_url: str):  # noqa: N802, RUF029
+async def draw_QR(login_url: str):
     "绘制二维码"
     qr = qrcode.QRCode(version=1, box_size=10, border=4)  # type: ignore
     qr.add_data(login_url)
