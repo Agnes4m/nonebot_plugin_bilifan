@@ -68,7 +68,7 @@ def retry(tries=3, interval=1):
                         else:
                             raise e
                     if count > tries:
-                        log.error(f"API {urlparse(args[1]).path} 调用出现异常: {str(e)}")
+                        log.error(f"API {urlparse(args[1]).path} 调用出现异常: {e!s}")
                         raise e
                     else:
                         # log.error(f"API {urlparse(args[1]).path} 调用出现异常: {str(e)}，重试中，第{count}次重试")
@@ -428,11 +428,7 @@ class BiliApi:
             )
         )
         now_timestamp = int(time.time())
-        timestamp = (
-            now_timestamp - 60
-            if now_timestamp - 60 > today_timestamp
-            else today_timestamp
-        )
+        timestamp = max(today_timestamp, now_timestamp - 60)
         data = {
             "platform": "android",
             "uuid": self.u.uuids[0],

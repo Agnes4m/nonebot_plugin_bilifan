@@ -255,7 +255,7 @@ async def mains(msg_path):
     return message_list
 
 
-def run(*args, **kwargs):  # noqa: ARG001
+def run(*args, **kwargs):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(mains(Path().joinpath("data/bilifan")))

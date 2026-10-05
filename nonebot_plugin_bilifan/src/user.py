@@ -36,7 +36,7 @@ class BiliUser:
                 int(x if x else 0) for x in str(bannedUIDs).split(",")
             ]  # 黑名单
         except ValueError:
-            raise ValueError("白名单或黑名单格式错误")  # noqa: B904
+            raise ValueError("白名单或黑名单格式错误")
 
         self.config = config
         self.medals = []  # 用户所有勋章
@@ -323,7 +323,7 @@ class BiliUser:
                             )
                         )
                         self.errmsg.append(
-                            f"【{self.name}】 {medal['anchor_info']['nick_name']} 房间弹幕打卡失败: {str(e)}"
+                            f"【{self.name}】 {medal['anchor_info']['nick_name']} 房间弹幕打卡失败: {e!s}"
                         )
                         i += 1  # 失败三次后跳过当前i
                         fail_count = 0  # 重置失败计数
@@ -423,7 +423,7 @@ class BiliUser:
                 nameList4.append(nick_name)
         self.message.append(f"【{self.name}】 今日亲密度获取情况如下：")
 
-        for l, n in zip(  # noqa: E741
+        for l, n in zip(
             [nameList1, nameList2, nameList3, nameList4, unlightList],
             ["【30】", "【24至30】", "【6至24】", "【6以下】", "【未点亮】"],
         ):
@@ -528,7 +528,7 @@ class BiliUser:
                 n += 1
             except Exception as e:
                 log.error(f"{nick_name} 活动签到失败: {e}")
-                self.errmsg.append(f"【{self.name}】 {nick_name} 活动签到失败: {str(e)}")
+                self.errmsg.append(f"【{self.name}】 {nick_name} 活动签到失败: {e!s}")
             await asyncio.sleep(self.config["ACTIVITY_SIGNIN"])
         if n:
             log.success(f"活动签到任务完成 {n}/{len(self.medals)}")
