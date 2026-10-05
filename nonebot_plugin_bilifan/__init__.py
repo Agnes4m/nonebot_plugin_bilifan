@@ -21,7 +21,7 @@ try:
 except BaseException:
     scheduler = None
 require("nonebot_plugin_alconna")
-from nonebot_plugin_alconna import UniMessage  # noqa: E402
+from nonebot_plugin_alconna import UniMessage
 
 logger.opt(colors=True).info(
     (
@@ -363,7 +363,7 @@ async def _(matcher: Matcher, event: Event):
 
         except Exception as e:
             error_count += 1
-            messages.append(f"✗ 更新失败: {user_dir.name} - {str(e)}")
+            messages.append(f"✗ 更新失败: {user_dir.name} - {e!s}")
             logger.error(f"更新配置文件失败: {config_file}, 错误: {e}")
 
     # 生成结果消息
